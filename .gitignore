@@ -1,0 +1,47 @@
+# ---- 依赖 ----
+node_modules/
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# ---- 数据库 ----
+*.db
+*.sqlite3
+backend/data/*.db
+
+# ---- 密钥与本地配置 ----
+.env
+.env.local
+*.local
+
+# ---- 构建产物 ----
+dist/
+build/
+frontend/dist/
+
+# ---- 前端构建缓存 ----
+.vite/
+frontend/.vite/
+
+# ---- 日志 ----
+*.log
+logs/
+
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- WorkBuddy 内部数据 ----
+.workbuddy/
+
+# ---- CodeBuddy ----
+.codebuddy/
+
+# ---- 虚拟环境 ----
+Computer/.venv/
+Computer/venv/
