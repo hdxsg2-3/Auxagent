@@ -1,0 +1,43 @@
+# ---- 依赖 ----
+node_modules/
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# ---- 数据库（运行时由 init_db 自动创建，无需提交）----
+*.db
+*.sqlite3
+backend/data/*.db
+
+# ---- 密钥与本地配置（含真实 API Key，切勿提交！）----
+.env
+.env.local
+*.local
+
+# ---- 构建产物 ----
+dist/
+build/
+frontend/dist/
+
+# ---- 前端构建缓存 ----
+.vite/
+frontend/.vite/
+
+# ---- 误留的 lock（backend 非 npm 项目）----
+backend/package-lock.json
+
+# ---- 日志 ----
+*.log
+logs/
+
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- WorkBuddy 内部数据 ----
+.workbuddy/

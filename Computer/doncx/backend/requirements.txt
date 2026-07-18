@@ -1,0 +1,7 @@
+flask==2.3.3
+flask-cors==4.0.0
+requests==2.31.0
+marshmallow==3.21.0
+
+# 可选：安装 Playwright 可大幅提升 1688 等反爬站点的抓取成功率
+# playwright>=1.40.0

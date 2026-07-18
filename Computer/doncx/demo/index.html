@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GlobalSeller AI - 跨境电商智能运营平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7C3AED;
+            --primary-hover: #6D28D9;
+            --primary-light: #F5F3FF;
+            --primary-glow: rgba(124, 58, 237, 0.3);
+            --secondary: #8B5CF6;
+            --accent: #A78BFA;
+            --accent-light: #C4B5FD;
+            --bg-sidebar: #0A0615;
+            --bg-content: #FDFBFF;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --border: #EDE9FE;
+            --text-primary: #1A1525;
+            --text-secondary: #5C5470;
+            --text-muted: #9B95A5;
+            --shadow-sm: 0 1px 3px rgba(124, 58, 237, 0.04);
+            --shadow-md: 0 4px 16px rgba(124, 58, 237, 0.08);
+            --shadow-lg: 0 8px 32px rgba(124, 58, 237, 0.12);
+            --shadow-xl: 0 16px 48px rgba(124, 58, 237, 0.16);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-content);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30%;
+            left: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .font-display {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #0A0615 0%, #120A25 50%, #0A0615 100%);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(124, 58, 237, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), transparent);
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: -20px;
+            width: 40px;
+            height: 60%;
+            background: radial-gradient(ellipse at right, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+        }
+
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-nav-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .sidebar-nav-item:hover {
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        .sidebar-nav-item.active {
+            color: var(--accent);
+        }
+
+        .sidebar-nav-item.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 0 3px 3px 0;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 0.5;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-4px);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px var(--primary-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            backdrop-filter: blur(8px);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .tag-high {
+            background: #FEF2F2;
+            color: #DC2626;
+            font-weight: 500;
+        }
+
+        .tag-medium {
+            background: #FEF3C7;
+            color: #D97706;
+            font-weight: 500;
+        }
+
+        .tag-low {
+            background: #ECFDF5;
+            color: #059669;
+            font-weight: 500;
+        }
+
+        .tag-success {
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+        }
+
+        .tag-warning {
+            background: rgba(217, 119, 6, 0.1);
+            color: #D97706;
+        }
+
+        .tag-error {
+            background: rgba(220, 38, 38, 0.1);
+            color: #DC2626;
+        }
+
+        .tag-info {
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--primary);
+        }
+
+        .page-transition {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(124, 58, 237, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(124, 58, 237, 0.05);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(124, 58, 237, 0.3);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: rgba(124, 58, 237, 0.5);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .stat-icon {
+            position: relative;
+        }
+
+        .stat-icon::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon::after {
+            opacity: 1;
+        }
+
+        .nav-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .message-unread {
+            position: relative;
+        }
+
+        .message-unread::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: #DC2626;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+            bottom: -20%;
+            right: -20%;
+        }
+
+        .header-glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+        }
+
+        .sidebar-logo {
+            position: relative;
+        }
+
+        .sidebar-logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover .sidebar-logo::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="flex">
+    <nav id="sidebar" class="sidebar w-60 h-screen fixed left-0 top-0 z-50 hidden md:flex flex-col">
+        <div class="p-6 border-b border-white/5">
+            <div class="sidebar-logo flex items-center gap-3 relative">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center relative z-10 shadow-lg shadow-violet-900/30">
+                    <i data-lucide="globe" class="w-5 h-5 text-white"></i>
+                </div>
+                <div class="relative z-10">
+                    <h1 class="text-lg font-bold text-white tracking-tight">GlobalSeller AI</h1>
+                    <p class="text-xs text-white/50">跨境电商智能平台</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 p-4 space-y-2">
+            <button onclick="navigateTo('home')" id="nav-home" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-medium">工作台</span>
+            </button>
+            <button onclick="navigateTo('copywriter')" id="nav-copywriter" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="pen-tool" class="w-5 h-5"></i>
+                <span class="font-medium">文案生成</span>
+            </button>
+            <button onclick="navigateTo('compliance')" id="nav-compliance" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+                <span class="font-medium">合规审查</span>
+            </button>
+            <button onclick="navigateTo('customer-service')" id="nav-customer-service" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white relative">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+                <span class="font-medium">客服应答</span>
+                <span class="ml-auto bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2.5 py-0.5 rounded-full shadow-lg shadow-red-900/30">5</span>
+            </button>
+            <button onclick="navigateTo('legal')" id="nav-legal" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span class="font-medium">法规检索</span>
+            </button>
+            <button onclick="navigateTo('logistics')" id="nav-logistics" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="package" class="w-5 h-5"></i>
+                <span class="font-medium">物流单据</span>
+            </button>
+        </div>
+
+        <div class="p-4 border-t border-white/5">
+            <button onclick="navigateTo('settings')" id="nav-settings" class="sidebar-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-white/70 hover:text-white">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span class="font-medium">系统设置</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="md:ml-60 flex-1 flex flex-col min-h-screen relative z-10">
+        <header class="h-16 header-glass flex items-center justify-between px-6 sticky top-0 z-40">
+            <div class="flex items-center gap-4 flex-1 max-w-xl">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" class="input-field w-full pl-11 pr-4 py-2.5 text-sm bg-white/50 border-white/10" placeholder="搜索功能、商品、订单...">
+                </div>
+                <button class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all relative">
+                    <i data-lucide="bell" class="w-5 h-5 text-white/70"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2.5 px-3.5 py-1.5 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-xl border border-violet-500/20">
+                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="text-xs font-semibold text-violet-300">VIP会员</span>
+                </div>
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-violet-900/30 group-hover:ring-2 ring-white/20 transition-all">
+                        S
+                    </div>
+                    <div class="hidden md:block">
+                        <p class="text-sm font-semibold text-white/90">深圳卖家</p>
+                        <p class="text-xs text-white/40">店铺ID: SHZ2024001</p>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all">
+                    <i data-lucide="menu" class="w-5 h-5 text-white/70"></i>
+                </button>
+            </div>
+        </header>
+
+        <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6">
+            <section id="page-home" class="page-transition">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">工作台</h2>
+                        <p class="text-sm text-slate-500 mt-2">欢迎回来，深圳卖家 · 今天是 2024年1月15日</p>
+                    </div>
+                    <button class="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 text-sm">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        新建任务
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <div class="stat-card card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-slate-500">文案生成</span>
+                            <div class="stat-icon w-12 h-12 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 flex items-center justify-center">
+                                <i data-lucide="pen-tool" class="w-6 h-6 text-violet-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <span class="text-4xl font-bold text-slate-900">28</span>
+                            <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mb-1.5 font-medium">+12%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3">今日完成</p>
+                    </div>
+
+                    <div class="stat-card card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-slate-500">客服回复</span>
+                            <div class="stat-icon w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+                                <i data-lucide="message-square" class="w-6 h-6 text-emerald-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <span class="text-4xl font-bold text-slate-900">156</span>
+                            <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mb-1.5 font-medium">+8%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3">今日完成</p>
+                    </div>
+
+                    <div class="stat-card card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-slate-500">合规审查</span>
+                            <div class="stat-icon w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                                <i data-lucide="shield-check" class="w-6 h-6 text-amber-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <span class="text-4xl font-bold text-slate-900">12</span>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mb-1.5 font-medium">持平</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3">今日完成</p>
+                    </div>
+
+                    <div class="stat-card card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-slate-500">单据生成</span>
+                            <div class="stat-icon w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+                                <i data-lucide="package" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <span class="text-4xl font-bold text-slate-900">8</span>
+                            <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full mb-1.5 font-medium">+5%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3">今日完成</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 card p-7">
+                        <div class="flex items-center justify-between mb-7">
+                            <h3 class="text-lg font-bold text-slate-900">快捷功能</h3>
+                            <a href="#" class="text-sm text-violet-600 hover:text-violet-700 font-medium">查看全部</a>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <button onclick="navigateTo('copywriter')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center mb-4 shadow-xl shadow-violet-900/20 group-hover:shadow-violet-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="pen-tool" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">文案生成</span>
+                                <span class="text-xs text-slate-500 mt-1.5">多语种智能生成</span>
+                            </button>
+                            <button onclick="navigateTo('compliance')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex items-center justify-center mb-4 shadow-xl shadow-amber-900/20 group-hover:shadow-amber-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">合规审查</span>
+                                <span class="text-xs text-slate-500 mt-1.5">风险检测预警</span>
+                            </button>
+                            <button onclick="navigateTo('customer-service')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center mb-4 shadow-xl shadow-emerald-900/20 group-hover:shadow-emerald-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="message-square" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">客服应答</span>
+                                <span class="text-xs text-slate-500 mt-1.5">7x24自动回复</span>
+                            </button>
+                            <button onclick="navigateTo('legal')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-yellow-500 to-lime-500 flex items-center justify-center mb-4 shadow-xl shadow-amber-900/20 group-hover:shadow-amber-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="file-text" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">法规检索</span>
+                                <span class="text-xs text-slate-500 mt-1.5">海外合规查询</span>
+                            </button>
+                            <button onclick="navigateTo('logistics')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 flex items-center justify-center mb-4 shadow-xl shadow-purple-900/20 group-hover:shadow-purple-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="package" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">物流单据</span>
+                                <span class="text-xs text-slate-500 mt-1.5">一键生成单据</span>
+                            </button>
+                            <button onclick="navigateTo('settings')" class="feature-card card p-6 flex flex-col items-center text-center group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 flex items-center justify-center mb-4 shadow-xl shadow-slate-900/20 group-hover:shadow-slate-900/40 transition-all group-hover:scale-110">
+                                    <i data-lucide="settings" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800">系统设置</span>
+                                <span class="text-xs text-slate-500 mt-1.5">API配置管理</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-lg font-bold text-slate-900">近期提醒</h3>
+                            <i data-lucide="bell" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-red-50 rounded-xl border border-red-100 hover:border-red-200 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-red-700">高风险文案待处理</p>
+                                        <p class="text-xs text-red-500 mt-1">3条文案存在极限词风险，请尽快审查</p>
+                                        <button class="text-xs text-red-600 hover:text-red-700 font-semibold mt-2">立即处理</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 hover:border-amber-200 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-amber-700">欧盟新法规即将生效</p>
+                                        <p class="text-xs text-amber-500 mt-1">GDPR更新条款将于下月生效</p>
+                                        <button class="text-xs text-amber-600 hover:text-amber-700 font-semibold mt-2">了解详情</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-violet-50 rounded-xl border border-violet-100 hover:border-violet-200 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="message-square" class="w-4 h-4 text-violet-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-violet-700">待人工处理消息</p>
+                                        <p class="text-xs text-violet-500 mt-1">5条客户消息需要人工回复</p>
+                                        <button class="text-xs text-violet-600 hover:text-violet-700 font-semibold mt-2">查看消息</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-copywriter" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">多语种文案生成</h2>
+                        <p class="text-sm text-slate-500 mt-2">输入中文产品描述，自动生成符合平台规则的多语种文案</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">产品信息输入</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">产品描述</label>
+                                <textarea id="copywriter-input" class="input-field w-full h-40 p-4 text-sm resize-none" placeholder="请输入中文产品描述，例如：白色2万毫安充电宝，带数显，支持双USB输出"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2.5">目标平台</label>
+                                    <div class="flex flex-wrap gap-2.5">
+                                        <button onclick="setPlatform('amazon')" id="platform-amazon" class="platform-btn px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-violet-500 bg-violet-50 text-violet-600 transition-all hover:shadow-md">
+                                            <i data-lucide="shopping-cart" class="w-4 h-4 inline mr-1.5"></i>亚马逊
+                                        </button>
+                                        <button onclick="setPlatform('ebay')" id="platform-ebay" class="platform-btn px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all">
+                                            <i data-lucide="tag" class="w-4 h-4 inline mr-1.5"></i>eBay
+                                        </button>
+                                        <button onclick="setPlatform('aliexpress')" id="platform-aliexpress" class="platform-btn px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all">
+                                            <i data-lucide="globe" class="w-4 h-4 inline mr-1.5"></i>速卖通
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2.5">目标语言</label>
+                                    <div class="flex flex-wrap gap-2.5">
+                                        <button onclick="setLanguage('en')" id="lang-en" class="lang-btn px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-violet-500 bg-violet-50 text-violet-600 transition-all hover:shadow-md">
+                                            英语
+                                        </button>
+                                        <button onclick="setLanguage('es')" id="lang-es" class="lang-btn px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all">
+                                            西班牙语
+                                        </button>
+                                        <button onclick="setLanguage('de')" id="lang-de" class="lang-btn px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all">
+                                            德语
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="generateCopy()" id="generate-btn" class="btn-primary w-full py-3.5 rounded-xl flex items-center justify-center gap-2.5 text-sm">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                智能生成文案
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="copywriter-result" class="card p-7">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-slate-900">生成结果</h3>
+                            <div class="flex gap-2.5">
+                                <button onclick="copyAll()" id="copy-btn" class="btn-secondary px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                    复制全部
+                                </button>
+                                <button onclick="translateCopy()" class="btn-outline px-5 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                                    <i data-lucide="languages" class="w-4 h-4"></i>
+                                    切换语言
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="copywriter-empty" class="text-center py-16">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
+                                <i data-lucide="pen-tool" class="w-10 h-10 text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">输入产品描述后点击"智能生成"</p>
+                        </div>
+
+                        <div id="copywriter-content" class="hidden space-y-6">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-2">标题 (Title)</label>
+                                <div class="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-100">
+                                    <p id="result-title" class="text-base font-bold text-slate-900"></p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-2">核心卖点 (Bullet Points)</label>
+                                <ul id="result-bullets" class="space-y-2.5"></ul>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-2">商品详情 (Description)</label>
+                                <div class="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-100">
+                                    <p id="result-description" class="text-sm text-slate-700 leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-compliance" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">合规风控审查</h2>
+                        <p class="text-sm text-slate-500 mt-2">检测极限词、品牌侵权、违禁词风险，提前预警</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">审查内容</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">商品文案</label>
+                                <textarea id="compliance-input" class="input-field w-full h-48 p-4 text-sm resize-none" placeholder="请输入商品文案内容进行合规审查..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">商品图片（可选）</label>
+                                <div class="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center hover:border-violet-300 hover:bg-violet-50/30 transition-all cursor-pointer" onclick="document.getElementById('compliance-image').click()">
+                                    <input type="file" id="compliance-image" class="hidden" accept="image/*">
+                                    <div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                                        <i data-lucide="image-plus" class="w-7 h-7 text-slate-400"></i>
+                                    </div>
+                                    <p class="text-sm text-slate-600 font-medium">点击上传图片</p>
+                                    <p class="text-xs text-slate-400 mt-1.5">支持 JPG、PNG 格式</p>
+                                </div>
+                            </div>
+
+                            <button onclick="startCompliance()" id="compliance-btn" class="btn-primary w-full py-3.5 rounded-xl flex items-center justify-center gap-2.5 text-sm">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                                开始合规审查
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">审查结果</h3>
+
+                        <div id="compliance-empty" class="text-center py-16">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
+                                <i data-lucide="shield-check" class="w-10 h-10 text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">输入文案后点击"开始合规审查"</p>
+                        </div>
+
+                        <div id="compliance-loading" class="hidden text-center py-16">
+                            <div class="loading-spinner mx-auto"></div>
+                            <p class="text-slate-500 mt-5 font-medium">正在审查中...</p>
+                        </div>
+
+                        <div id="compliance-content" class="hidden space-y-4">
+                            <div id="high-risk" class="hidden p-5 bg-red-50 rounded-xl border border-red-100">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
+                                    <span class="font-bold text-red-700">高风险</span>
+                                </div>
+                                <ul id="high-risk-list" class="space-y-2.5 text-sm text-red-600"></ul>
+                            </div>
+
+                            <div id="medium-risk" class="hidden p-5 bg-amber-50 rounded-xl border border-amber-100">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-amber-500"></i>
+                                    <span class="font-bold text-amber-700">中风险</span>
+                                </div>
+                                <ul id="medium-risk-list" class="space-y-2.5 text-sm text-amber-600"></ul>
+                            </div>
+
+                            <div id="low-risk" class="hidden p-5 bg-emerald-50 rounded-xl border border-emerald-100">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
+                                    <span class="font-bold text-emerald-700">低风险/通过</span>
+                                </div>
+                                <ul id="low-risk-list" class="space-y-2.5 text-sm text-emerald-600"></ul>
+                            </div>
+
+                            <div class="p-5 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-100 mt-6">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <i data-lucide="lightbulb" class="w-5 h-5 text-violet-500"></i>
+                                    <span class="font-bold text-violet-700">整改建议</span>
+                                </div>
+                                <p id="compliance-suggestion" class="text-sm text-violet-600"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-customer-service" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">海外客服自动应答</h2>
+                        <p class="text-sm text-slate-500 mt-2">7x24小时自动处理海外客户咨询，复杂问题推送人工</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="viewHistory()" class="btn-secondary px-5 py-2.5 rounded-xl text-sm">
+                            <i data-lucide="history" class="w-4 h-4 inline mr-1.5"></i>查看历史
+                        </button>
+                        <button onclick="configureRules()" class="btn-primary px-5 py-2.5 rounded-xl text-sm">
+                            <i data-lucide="settings" class="w-4 h-4 inline mr-1.5"></i>配置规则
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-5">消息列表</h3>
+                        <div id="message-list" class="space-y-3 max-h-[520px] overflow-y-auto scrollbar-thin">
+                            <div onclick="selectMessage(0)" class="message-item p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl cursor-pointer border border-violet-100 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">John Smith</p>
+                                        <p class="text-xs text-slate-500 mt-1.5">How long will shipping take?</p>
+                                    </div>
+                                    <span class="tag-success text-xs px-2.5 py-1 rounded-full">已自动回复</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2.5">10:30 AM · 亚马逊</p>
+                            </div>
+
+                            <div onclick="selectMessage(1)" class="message-item p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">Alice Johnson</p>
+                                        <p class="text-xs text-slate-500 mt-1.5">Can I return this item?</p>
+                                    </div>
+                                    <span class="tag-warning text-xs px-2.5 py-1 rounded-full">待处理</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2.5">9:15 AM · eBay</p>
+                            </div>
+
+                            <div onclick="selectMessage(2)" class="message-item p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">Mike Brown</p>
+                                        <p class="text-xs text-slate-500 mt-1.5">Is this compatible with iPhone 14?</p>
+                                    </div>
+                                    <span class="tag-success text-xs px-2.5 py-1 rounded-full">已自动回复</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2.5">Yesterday · 亚马逊</p>
+                            </div>
+
+                            <div onclick="selectMessage(3)" class="message-item p-4 bg-red-50 rounded-xl cursor-pointer hover:bg-red-100 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">Sarah Wilson</p>
+                                        <p class="text-xs text-slate-500 mt-1.5">I received a missing item</p>
+                                    </div>
+                                    <span class="tag-error text-xs px-2.5 py-1 rounded-full">需人工处理</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2.5">Yesterday · 速卖通</p>
+                            </div>
+
+                            <div onclick="selectMessage(4)" class="message-item p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">Chris Davis</p>
+                                        <p class="text-xs text-slate-500 mt-1.5">Can you give me a discount?</p>
+                                    </div>
+                                    <span class="tag-error text-xs px-2.5 py-1 rounded-full">需人工处理</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2.5">2 days ago · eBay</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">消息详情</h3>
+
+                        <div id="message-detail">
+                            <div class="bg-slate-50 rounded-xl p-5 mb-4">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <span class="text-xs font-semibold text-slate-500">客户消息</span>
+                                    <span class="tag-info text-xs px-2.5 py-1 rounded-full">John Smith</span>
+                                </div>
+                                <p class="text-slate-800 font-medium">"How long will shipping take?"</p>
+                            </div>
+
+                            <div class="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-5 mb-4 border border-violet-100">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <span class="text-xs font-semibold text-violet-500">AI自动回复</span>
+                                </div>
+                                <p class="text-violet-900 font-medium">"Standard shipping takes 7-14 business days. Expedited shipping is available for faster delivery."</p>
+                            </div>
+
+                            <div class="flex items-center gap-4 text-xs text-slate-500">
+                                <span class="tag-success px-2.5 py-1 rounded-full">已自动回复</span>
+                                <span>10:30 AM · 2024-01-15</span>
+                                <span>亚马逊平台</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-legal" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">海外法规检索</h2>
+                        <p class="text-sm text-slate-500 mt-2">查询目标市场法律法规，确保合规运营</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 card p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">筛选条件</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">目标地区</label>
+                                <div class="grid grid-cols-2 gap-2.5">
+                                    <button onclick="setRegion('usa')" id="region-usa" class="region-btn px-4 py-2.5 rounded-xl text-sm font-medium border-2 border-amber-500 bg-amber-50 text-amber-600 transition-all">
+                                        <i data-lucide="flag" class="w-4 h-4 inline mr-1.5"></i>美国
+                                    </button>
+                                    <button onclick="setRegion('eu')" id="region-eu" class="region-btn px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all">
+                                        <i data-lucide="flag" class="w-4 h-4 inline mr-1.5"></i>欧盟
+                                    </button>
+                                    <button onclick="setRegion('jp')" id="region-jp" class="region-btn px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all">
+                                        <i data-lucide="flag" class="w-4 h-4 inline mr-1.5"></i>日本
+                                    </button>
+                                    <button onclick="setRegion('kr')" id="region-kr" class="region-btn px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all">
+                                        <i data-lucide="flag" class="w-4 h-4 inline mr-1.5"></i>韩国
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">法规分类</label>
+                                <div class="space-y-2">
+                                    <button onclick="setLegalCategory('consumer')" id="cat-consumer" class="cat-btn w-full px-4 py-2.5 rounded-xl text-sm font-medium border-2 border-amber-500 bg-amber-50 text-amber-600 transition-all flex items-center justify-between">
+                                        <span><i data-lucide="shield" class="w-4 h-4 inline mr-2"></i>消费者保护</span>
+                                    </button>
+                                    <button onclick="setLegalCategory('product')" id="cat-product" class="cat-btn w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all flex items-center justify-between">
+                                        <span><i data-lucide="package" class="w-4 h-4 inline mr-2"></i>产品合规</span>
+                                    </button>
+                                    <button onclick="setLegalCategory('labeling')" id="cat-labeling" class="cat-btn w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all flex items-center justify-between">
+                                        <span><i data-lucide="tag" class="w-4 h-4 inline mr-2"></i>标签标识</span>
+                                    </button>
+                                    <button onclick="setLegalCategory('data')" id="cat-data" class="cat-btn w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:border-amber-300 transition-all flex items-center justify-between">
+                                        <span><i data-lucide="file-key" class="w-4 h-4 inline mr-2"></i>数据隐私</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button onclick="searchLegal()" class="btn-primary w-full py-3 rounded-xl text-sm">
+                                开始检索
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 card p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-5">检索结果</h3>
+
+                        <div id="legal-empty" class="text-center py-16">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
+                                <i data-lucide="file-text" class="w-10 h-10 text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">选择地区和分类后点击"开始检索"</p>
+                        </div>
+
+                        <div id="legal-content" class="hidden space-y-4">
+                            <div class="p-5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100 cursor-pointer hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">美国消费者权益保护法 (CCPA)</h4>
+                                        <p class="text-sm text-slate-600 mt-1">加州消费者隐私法案，赋予消费者数据控制权</p>
+                                    </div>
+                                    <span class="tag-warning text-xs px-2.5 py-1 rounded-full">重点关注</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                                    <span><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>美国</span>
+                                    <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>2020年生效</span>
+                                </div>
+                            </div>
+
+                            <div class="p-5 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-100 cursor-pointer hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">欧盟通用数据保护条例 (GDPR)</h4>
+                                        <p class="text-sm text-slate-600 mt-1">欧盟数据保护法规，严格的数据隐私保护要求</p>
+                                    </div>
+                                    <span class="tag-info text-xs px-2.5 py-1 rounded-full">重要法规</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                                    <span><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>欧盟</span>
+                                    <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>2018年生效</span>
+                                </div>
+                            </div>
+
+                            <div class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 cursor-pointer hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">美国产品安全法 (CPSIA)</h4>
+                                        <p class="text-sm text-slate-600 mt-1">消费品安全改进法案，针对儿童产品安全标准</p>
+                                    </div>
+                                    <span class="tag-success text-xs px-2.5 py-1 rounded-full">常规合规</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                                    <span><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>美国</span>
+                                    <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>2008年生效</span>
+                                </div>
+                            </div>
+
+                            <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 cursor-pointer hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">日本电器用品安全法 (PSE)</h4>
+                                        <p class="text-sm text-slate-600 mt-1">日本电气产品安全认证要求</p>
+                                    </div>
+                                    <span class="tag-success text-xs px-2.5 py-1 rounded-full">常规合规</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                                    <span><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>日本</span>
+                                    <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>2001年生效</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+                            <button onclick="saveToHistory()" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                                <i data-lucide="bookmark" class="w-4 h-4 inline mr-1.5"></i>保存到历史
+                            </button>
+                            <button onclick="showLegalDetail()" class="btn-primary px-4 py-2 rounded-lg text-sm">
+                                <i data-lucide="external-link" class="w-4 h-4 inline mr-1.5"></i>查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-logistics" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">物流单据生成</h2>
+                        <p class="text-sm text-slate-500 mt-2">一键生成商业发票、装箱单、提单等物流单据</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">单据信息</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">单据类型</label>
+                                <div class="grid grid-cols-3 gap-2.5">
+                                    <button onclick="setDocType('commercial_invoice')" id="doc-commercial-invoice" class="doc-btn px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-violet-500 bg-violet-50 text-violet-600 transition-all">
+                                        <i data-lucide="file-text" class="w-4 h-4 inline mr-1.5"></i>商业发票
+                                    </button>
+                                    <button onclick="setDocType('packing_list')" id="doc-packing-list" class="doc-btn px-4 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 transition-all">
+                                        <i data-lucide="package" class="w-4 h-4 inline mr-1.5"></i>装箱单
+                                    </button>
+                                    <button onclick="setDocType('bill_of_lading')" id="doc-bill-of-lading" class="doc-btn px-4 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-600 hover:border-violet-300 transition-all">
+                                        <i data-lucide="ship" class="w-4 h-4 inline mr-1.5"></i>提单
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2.5">订单号</label>
+                                    <input type="text" id="logistics-order-id" class="input-field w-full p-3 text-sm" placeholder="ORD-20240115001">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2.5">客户名称</label>
+                                    <input type="text" id="logistics-customer" class="input-field w-full p-3 text-sm" placeholder="John Smith">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">发货地址</label>
+                                <textarea id="logistics-from" class="input-field w-full h-20 p-3 text-sm resize-none" placeholder="深圳市南山区科技园路88号"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">收货地址</label>
+                                <textarea id="logistics-to" class="input-field w-full h-20 p-3 text-sm resize-none" placeholder="123 Main Street, New York, NY 10001"></textarea>
+                            </div>
+
+                            <button onclick="generateDocument()" class="btn-primary w-full py-3.5 rounded-xl flex items-center justify-center gap-2.5 text-sm">
+                                <i data-lucide="file-check" class="w-5 h-5"></i>
+                                生成单据
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">单据预览</h3>
+
+                        <div id="logistics-empty" class="text-center py-16">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-5">
+                                <i data-lucide="file-text" class="w-10 h-10 text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">填写信息后点击"生成单据"</p>
+                        </div>
+
+                        <div id="logistics-content" class="hidden">
+                            <div class="bg-white border-2 border-slate-200 rounded-xl p-6 shadow-md">
+                                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+                                    <div>
+                                        <h4 class="text-lg font-bold text-slate-900">商业发票 (Commercial Invoice)</h4>
+                                        <p class="text-xs text-slate-500 mt-1">Invoice No.: INV-20240115001</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-slate-500">Date: 2024-01-15</p>
+                                        <p class="text-xs text-slate-500">Payment Terms: T/T</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-500 mb-1">发货方 (Seller)</p>
+                                        <p class="text-sm text-slate-800">Shenzhen GlobalSeller Co., Ltd.</p>
+                                        <p class="text-xs text-slate-600 mt-1">88 Science Park Road, Shenzhen</p>
+                                        <p class="text-xs text-slate-600">Tel: +86 755 1234 5678</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-500 mb-1">收货方 (Buyer)</p>
+                                        <p class="text-sm text-slate-800">John Smith</p>
+                                        <p class="text-xs text-slate-600 mt-1">123 Main Street, New York</p>
+                                        <p class="text-xs text-slate-600">NY 10001, USA</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-xs font-semibold text-slate-500 mb-2">商品明细 (Goods Description)</p>
+                                    <div class="bg-slate-50 rounded-lg overflow-hidden">
+                                        <table class="w-full text-sm">
+                                            <thead class="bg-slate-100">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">商品名称</th>
+                                                    <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">数量</th>
+                                                    <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">单价</th>
+                                                    <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">金额</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="px-4 py-2 text-slate-800">Power Bank</td>
+                                                    <td class="px-4 py-2 text-right text-slate-600">10</td>
+                                                    <td class="px-4 py-2 text-right text-slate-600">$25.00</td>
+                                                    <td class="px-4 py-2 text-right font-semibold text-slate-800">$250.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-4 py-2 text-slate-800">USB Cable</td>
+                                                    <td class="px-4 py-2 text-right text-slate-600">20</td>
+                                                    <td class="px-4 py-2 text-right text-slate-600">$5.00</td>
+                                                    <td class="px-4 py-2 text-right font-semibold text-slate-800">$100.00</td>
+                                                </tr>
+                                                <tr class="bg-slate-200/50">
+                                                    <td class="px-4 py-2 font-semibold text-slate-700" colspan="3">合计 (Total)</td>
+                                                    <td class="px-4 py-2 text-right font-bold text-slate-900">$350.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between text-xs text-slate-500 mt-6 pt-4 border-t border-slate-200">
+                                    <div>
+                                        <span class="font-semibold">贸易术语: </span>FOB Shenzhen
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold">币种: </span>USD
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-2.5 mt-6">
+                                <button onclick="exportAll()" class="btn-secondary px-5 py-2.5 rounded-xl text-sm">
+                                    <i data-lucide="download" class="w-4 h-4 inline mr-1.5"></i>导出全部
+                                </button>
+                                <button onclick="printDocument()" class="btn-primary px-5 py-2.5 rounded-xl text-sm">
+                                    <i data-lucide="printer" class="w-4 h-4 inline mr-1.5"></i>打印
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-settings" class="page-transition hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">系统设置</h2>
+                        <p class="text-sm text-slate-500 mt-2">配置API密钥、店铺信息等系统设置</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">API 配置</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">API密钥</label>
+                                <input type="password" id="settings-api-key" class="input-field w-full p-3.5 text-sm" placeholder="sk-...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">接口地址</label>
+                                <input type="text" id="settings-api-endpoint" class="input-field w-full p-3.5 text-sm" placeholder="https://api.example.com/v1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">模型名称</label>
+                                <select id="settings-model" class="input-field w-full p-3.5 text-sm">
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    <option value="claude-3">Claude 3</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button onclick="saveSettings()" class="flex-1 btn-primary py-3.5 rounded-xl">保存配置</button>
+                                <button onclick="testConnection()" id="test-btn" class="flex-1 btn-secondary py-3.5 rounded-xl">测试连接</button>
+                            </div>
+
+                            <div id="test-result" class="hidden"></div>
+                        </div>
+                    </div>
+
+                    <div class="card p-7">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6">店铺信息</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">店铺名称</label>
+                                <input type="text" id="settings-shop-name" class="input-field w-full p-3.5 text-sm" placeholder="我的跨境店铺">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">主营类目</label>
+                                <select id="settings-category" class="input-field w-full p-3.5 text-sm">
+                                    <option value="electronics">电子产品</option>
+                                    <option value="clothing">服装</option>
+                                    <option value="beauty">美妆</option>
+                                    <option value="toys">玩具</option>
+                                    <option value="home">家居用品</option>
+                                    <option value="other">其他</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2.5">目标平台</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center gap-2.5 cursor-pointer">
+                                        <input type="checkbox" checked class="w-4 h-4 text-violet-600 rounded focus:ring-violet-500">
+                                        <span class="text-sm text-slate-600 font-medium">亚马逊</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5 cursor-pointer">
+                                        <input type="checkbox" class="w-4 h-4 text-violet-600 rounded focus:ring-violet-500">
+                                        <span class="text-sm text-slate-600 font-medium">eBay</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5 cursor-pointer">
+                                        <input type="checkbox" class="w-4 h-4 text-violet-600 rounded focus:ring-violet-500">
+                                        <span class="text-sm text-slate-600 font-medium">速卖通</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button onclick="saveShopInfo()" class="btn-secondary w-full py-3.5 rounded-xl">保存店铺信息</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let currentPage = 'home';
+        let currentPlatform = 'amazon';
+        let currentLanguage = 'en';
+        let currentRegion = 'usa';
+        let currentLegalCategory = 'consumer';
+        let currentDocType = 'commercial_invoice';
+
+        function navigateTo(page) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`page-${page}`).classList.remove('hidden');
+
+            document.querySelectorAll('.sidebar-nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(`nav-${page}`).classList.add('active');
+
+            currentPage = page;
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function setPlatform(platform) {
+            currentPlatform = platform;
+            document.querySelectorAll('.platform-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+                btn.classList.add('border', 'border-slate-200', 'text-slate-600');
+            });
+            document.getElementById(`platform-${platform}`).classList.add('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+            document.getElementById(`platform-${platform}`).classList.remove('border', 'border-slate-200', 'text-slate-600');
+        }
+
+        function setLanguage(language) {
+            currentLanguage = language;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+                btn.classList.add('border', 'border-slate-200', 'text-slate-600');
+            });
+            document.getElementById(`lang-${language}`).classList.add('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+            document.getElementById(`lang-${language}`).classList.remove('border', 'border-slate-200', 'text-slate-600');
+        }
+
+        function generateCopy() {
+            const input = document.getElementById('copywriter-input').value;
+            if (!input.trim()) {
+                alert('请输入产品描述');
+                return;
+            }
+
+            const btn = document.getElementById('generate-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading-spinner"></div><span class="ml-2">正在生成...</span>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('copywriter-empty').classList.add('hidden');
+                document.getElementById('copywriter-content').classList.remove('hidden');
+
+                const titles = {
+                    'en': '20000mAh Portable Power Bank with LED Display - White',
+                    'es': 'Banco de energía portátil de 20000mAh con pantalla LED - Blanco',
+                    'de': '20000mAh Portable Powerbank mit LED-Anzeige - Weiß'
+                };
+
+                const bullets = {
+                    'en': [
+                        '20000mAh large capacity, charges iPhone 14 over 5 times',
+                        'LED digital display shows real-time remaining power',
+                        'Dual USB output ports, charge two devices simultaneously',
+                        'Smart chip protection against overcharge, overdischarge, short circuit',
+                        'Slim and portable design, perfect for travel and daily use'
+                    ],
+                    'es': [
+                        'Gran capacidad de 20000mAh, carga iPhone 14 más de 5 veces',
+                        'Pantalla LED digital muestra la potencia restante en tiempo real',
+                        'Dos puertos de salida USB, carga dos dispositivos simultáneamente',
+                        'Protección de chip inteligente contra sobrecarga, descarga excesiva y cortocircuito',
+                        'Diseño delgado y portátil, ideal para viajar y uso diario'
+                    ],
+                    'de': [
+                        'Große Kapazität von 20000mAh, lädt iPhone 14 über 5 Mal auf',
+                        'LED-Digitalanzeige zeigt den aktuellen Reststrom an',
+                        'Zwei USB-Ausgangsportale, lädt zwei Geräte gleichzeitig',
+                        'Intelligenter Chip-Schutz vor Überladung, Entladung und Kurzschluss',
+                        'Schlankes und tragbares Design, perfekt für Reisen und täglichen Gebrauch'
+                    ]
+                };
+
+                const descriptions = {
+                    'en': 'Our 20000mAh Portable Power Bank is the perfect companion for your on-the-go lifestyle. With its large capacity, it can charge your iPhone 14 more than 5 times, ensuring you never run out of power when you need it most. The LED digital display allows you to easily check the remaining battery level at a glance. Equipped with dual USB output ports, you can charge two devices simultaneously, making it ideal for sharing with friends or family.',
+                    'es': 'Nuestro banco de energía portátil de 20000mAh es el compañero perfecto para tu estilo de vida en movimiento. Con su gran capacidad, puede cargar tu iPhone 14 más de 5 veces, asegurándose de que nunca te quedes sin energía cuando la necesites más.',
+                    'de': 'Unsere 20000mAh Portable Powerbank ist der perfekte Begleiter für deinen unterwegs-lifestyle. Mit seiner großen Kapazität kann sie dein iPhone 14 mehr als 5 Mal aufladen, sodass du nie ohne Strom bleibst.'
+                };
+
+                document.getElementById('result-title').textContent = titles[currentLanguage];
+
+                const bulletsContainer = document.getElementById('result-bullets');
+                bulletsContainer.innerHTML = '';
+                bullets[currentLanguage].forEach((bullet, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start gap-2.5 bg-slate-50 rounded-xl p-3 border border-slate-100';
+                    li.innerHTML = `<span class="font-semibold text-violet-600 w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">${index + 1}</span><span class="text-sm text-slate-700">${bullet}</span>`;
+                    bulletsContainer.appendChild(li);
+                });
+
+                document.getElementById('result-description').textContent = descriptions[currentLanguage];
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }, 1500);
+        }
+
+        function copyAll() {
+            const title = document.getElementById('result-title').textContent;
+            const bullets = document.getElementById('result-bullets').innerText;
+            const description = document.getElementById('result-description').textContent;
+
+            const text = `Title: ${title}\n\nBullet Points:\n${bullets}\n\nDescription:\n${description}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>已复制';
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+                btn.classList.remove('bg-white/80', 'text-slate-600', 'border-slate-200');
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-green-500', 'text-white', 'border-green-500');
+                    btn.classList.add('bg-white/80', 'text-slate-600', 'border-slate-200');
+                    lucide.createIcons();
+                }, 2000);
+            });
+        }
+
+        function translateCopy() {
+            const languages = ['en', 'es', 'de'];
+            const currentIndex = languages.indexOf(currentLanguage);
+            const nextIndex = (currentIndex + 1) % languages.length;
+            setLanguage(languages[nextIndex]);
+            generateCopy();
+        }
+
+        function startCompliance() {
+            const input = document.getElementById('compliance-input').value;
+            if (!input.trim()) {
+                alert('请输入要审查的文案');
+                return;
+            }
+
+            document.getElementById('compliance-empty').classList.add('hidden');
+            document.getElementById('compliance-content').classList.add('hidden');
+            document.getElementById('compliance-loading').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('compliance-loading').classList.add('hidden');
+                document.getElementById('compliance-content').classList.remove('hidden');
+
+                const hasExtreme = input.includes('最牛') || input.includes('第一') || input.includes('顶级') || input.includes('最好');
+                const hasBrand = input.includes('Apple') || input.includes('Nike') || input.includes('Disney');
+                const hasForbidden = input.includes('武器') || input.includes('毒品') || input.includes('医疗');
+
+                if (hasExtreme || hasBrand || hasForbidden) {
+                    document.getElementById('high-risk').classList.remove('hidden');
+                    const highList = document.getElementById('high-risk-list');
+                    highList.innerHTML = '';
+                    if (hasExtreme) {
+                        const li = document.createElement('li');
+                        li.innerHTML = '<span class="font-semibold">极限词违规</span> - 检测到"最牛/第一/顶级/最好"等极限词';
+                        highList.appendChild(li);
+                    }
+                    if (hasBrand) {
+                        const li = document.createElement('li');
+                        li.innerHTML = '<span class="font-semibold">品牌侵权风险</span> - 检测到Apple/Nike/Disney等品牌名';
+                        highList.appendChild(li);
+                    }
+                    if (hasForbidden) {
+                        const li = document.createElement('li');
+                        li.innerHTML = '<span class="font-semibold">违禁类目词</span> - 检测到敏感词汇';
+                        highList.appendChild(li);
+                    }
+                }
+
+                document.getElementById('medium-risk').classList.remove('hidden');
+                const mediumList = document.getElementById('medium-risk-list');
+                mediumList.innerHTML = '<li><span class="font-semibold">平台特定规则</span> - 符合亚马逊平台规则要求</li>';
+
+                document.getElementById('low-risk').classList.remove('hidden');
+                const lowList = document.getElementById('low-risk-list');
+                lowList.innerHTML = '<li><span class="font-semibold">广告法合规</span> - 未检测到虚假宣传内容</li><li><span class="font-semibold">模糊表述</span> - 文案表述清晰明确</li>';
+
+                document.getElementById('compliance-suggestion').textContent = '建议替换极限词为中性描述，避免使用知名品牌名称作为描述词。如有品牌授权，请提供相关证明文件。';
+
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        const messages = [
+            { customer: 'John Smith', message: 'How long will shipping take?', response: 'Standard shipping takes 7-14 business days. Expedited shipping is available for faster delivery.', status: '已自动回复', platform: '亚马逊' },
+            { customer: 'Alice Johnson', message: 'Can I return this item?', response: '', status: '待处理', platform: 'eBay' },
+            { customer: 'Mike Brown', message: 'Is this compatible with iPhone 14?', response: 'Yes, this power bank is fully compatible with iPhone 14 and all USB devices.', status: '已自动回复', platform: '亚马逊' },
+            { customer: 'Sarah Wilson', message: 'I received a missing item', response: '', status: '需人工处理', platform: '速卖通' },
+            { customer: 'Chris Davis', message: 'Can you give me a discount?', response: '', status: '需人工处理', platform: 'eBay' }
+        ];
+
+        function selectMessage(index) {
+            document.querySelectorAll('.message-item').forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('bg-gradient-to-r', 'from-violet-50', 'to-purple-50', 'border', 'border-violet-100');
+                    item.classList.remove('bg-slate-50');
+                } else {
+                    item.classList.remove('bg-gradient-to-r', 'from-violet-50', 'to-purple-50', 'border', 'border-violet-100');
+                    item.classList.add('bg-slate-50');
+                }
+            });
+
+            const msg = messages[index];
+            document.getElementById('message-detail').innerHTML = `
+                <div class="bg-slate-50 rounded-xl p-5 mb-4">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <span class="text-xs font-semibold text-slate-500">客户消息</span>
+                        <span class="tag-info text-xs px-2.5 py-1 rounded-full">${msg.customer}</span>
+                    </div>
+                    <p class="text-slate-800 font-medium">"${msg.message}"</p>
+                </div>
+                ${msg.response ? `
+                <div class="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-5 mb-4 border border-violet-100">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <span class="text-xs font-semibold text-violet-500">AI自动回复</span>
+                    </div>
+                    <p class="text-violet-900 font-medium">"${msg.response}"</p>
+                </div>
+                ` : ''}
+                <div class="flex items-center gap-4 text-xs text-slate-500">
+                    <span class="px-2.5 py-1 rounded-full ${msg.status === '已自动回复' ? 'tag-success' : msg.status === '需人工处理' ? 'tag-error' : 'tag-warning'}">${msg.status}</span>
+                    <span>${index === 0 ? '10:30 AM' : index === 1 ? '9:15 AM' : index === 2 ? 'Yesterday' : index === 3 ? 'Yesterday' : '2 days ago'} · 2024-01-15</span>
+                    <span>${msg.platform}平台</span>
+                </div>
+            `;
+
+            lucide.createIcons();
+        }
+
+        function viewHistory() {
+            alert('查看历史记录功能');
+        }
+
+        function configureRules() {
+            alert('配置回复规则功能');
+        }
+
+        function setRegion(region) {
+            currentRegion = region;
+            document.querySelectorAll('.region-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-amber-500', 'bg-amber-50', 'text-amber-600');
+                btn.classList.add('border', 'border-slate-200', 'text-slate-600');
+            });
+            document.getElementById(`region-${region}`).classList.add('border-2', 'border-amber-500', 'bg-amber-50', 'text-amber-600');
+            document.getElementById(`region-${region}`).classList.remove('border', 'border-slate-200', 'text-slate-600');
+        }
+
+        function setLegalCategory(category) {
+            currentLegalCategory = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-amber-500', 'bg-amber-50', 'text-amber-600');
+                btn.classList.add('border', 'border-slate-200', 'text-slate-600');
+            });
+            document.getElementById(`cat-${category}`).classList.add('border-2', 'border-amber-500', 'bg-amber-50', 'text-amber-600');
+            document.getElementById(`cat-${category}`).classList.remove('border', 'border-slate-200', 'text-slate-600');
+        }
+
+        function searchLegal() {
+            document.getElementById('legal-empty').classList.add('hidden');
+            document.getElementById('legal-content').classList.remove('hidden');
+        }
+
+        function saveToHistory() {
+            alert('已保存到检索历史');
+        }
+
+        function showLegalDetail() {
+            alert('法规详情查看功能');
+        }
+
+        function setDocType(docType) {
+            currentDocType = docType;
+            document.querySelectorAll('.doc-btn').forEach(btn => {
+                btn.classList.remove('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+                btn.classList.add('border', 'border-slate-200', 'text-slate-600');
+            });
+            document.getElementById(`doc-${docType.replace('_', '-')}`).classList.add('border-2', 'border-violet-500', 'bg-violet-50', 'text-violet-600');
+            document.getElementById(`doc-${docType.replace('_', '-')}`).classList.remove('border', 'border-slate-200', 'text-slate-600');
+        }
+
+        function generateDocument() {
+            const orderId = document.getElementById('logistics-order-id').value;
+            if (!orderId) {
+                alert('请填写订单号');
+                return;
+            }
+
+            document.getElementById('logistics-empty').classList.add('hidden');
+            document.getElementById('logistics-content').classList.remove('hidden');
+        }
+
+        function exportAll() {
+            alert('导出全部单据');
+        }
+
+        function printDocument() {
+            alert('打印单据');
+        }
+
+        function saveSettings() {
+            const apiKey = document.getElementById('settings-api-key').value;
+            const endpoint = document.getElementById('settings-api-endpoint').value;
+
+            if (!apiKey || !endpoint) {
+                alert('请填写完整的API配置信息');
+                return;
+            }
+
+            alert('API配置已保存');
+        }
+
+        function testConnection() {
+            const btn = document.getElementById('test-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '测试中...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const result = document.getElementById('test-result');
+                result.classList.remove('hidden');
+                result.className = 'mt-4 p-3 bg-green-50 border border-green-200 rounded-xl';
+                result.innerHTML = '<span class="text-green-600 font-semibold">✓ 连接成功</span> - API服务正常';
+
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function saveShopInfo() {
+            alert('店铺信息已保存');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            document.getElementById('nav-home').classList.add('active');
+        });
+    </script>
+</body>
+</html>
