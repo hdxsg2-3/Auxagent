@@ -1,0 +1,6 @@
+{
+  "message_zh": "你好，我想知道我的订单什么时候能到。",
+  "response": "Hi there! To check the exact arrival time of your order, we’ll look up the tracking details. We’ll get back to you within 24 hours with an update. Thank you for your patience!",
+  "response_zh": "您好！为了查询您订单的确切到达时间，我们会查看跟踪详情。我们会在24小时内回复您并提供更新。感谢您的耐心等待！",
+  "status": "pending"
+}

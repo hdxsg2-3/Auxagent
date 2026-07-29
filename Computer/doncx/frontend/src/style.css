@@ -99,7 +99,6 @@ body::after {
   background: linear-gradient(180deg, #0A0615 0%, #120A25 50%, #0A0615 100%);
   backdrop-filter: blur(24px);
   border-right: 1px solid rgba(124, 58, 237, 0.1);
-  position: relative;
   overflow: hidden;
 }
 

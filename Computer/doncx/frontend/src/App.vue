@@ -2,10 +2,10 @@
   <div class="flex min-h-screen">
     <aside
       id="sidebar"
-      class="sidebar fixed left-0 top-0 z-50 w-60 h-screen flex flex-col transition-all duration-300"
+      class="sidebar fixed left-0 top-0 z-50 w-52 h-screen flex flex-col transition-all duration-300 overflow-y-auto"
       :class="[
         sidebarVisible ? 'translate-x-0' : '-translate-x-full',
-        'md:translate-x-0 md:static md:h-auto md:min-h-screen'
+        'md:translate-x-0'
       ]"
     >
       <div class="h-full">
@@ -61,7 +61,7 @@
       </div>
     </aside>
 
-    <div class="flex-1 flex flex-col" :class="{'md:ml-60': true}">
+    <div class="flex-1 flex flex-col md:ml-52">
       <header class="h-16 header-glass flex items-center justify-between px-6 sticky top-0 z-40">
         <div class="flex items-center gap-4 flex-1 max-w-xl">
           <div class="relative flex-1">
@@ -102,17 +102,19 @@
       </header>
 
       <main class="flex-1 p-6 md:p-8 space-y-6 relative z-10">
-        <component :is="currentComponent" class="page-transition" />
+        <KeepAlive max="12">
+          <component :is="currentComponent" @pending-count-changed="pendingCount = $event" class="page-transition" />
+        </KeepAlive>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, provide } from 'vue'
 import {
   Globe, LayoutDashboard, PenTool, ShieldCheck, MessageSquare,
-  FileText, Package, Settings, Search, Bell, Menu
+  FileText, Package, Settings, Bell, Menu, Store, Zap, ShoppingCart, Clock, Eye, Image
 } from 'lucide-vue-next'
 
 import Dashboard from './components/Dashboard.vue'
@@ -121,27 +123,51 @@ import Compliance from './components/Compliance.vue'
 import CustomerService from './components/CustomerService.vue'
 import Legal from './components/Legal.vue'
 import Logistics from './components/Logistics.vue'
+import ListingManager from './components/ListingManager.vue'
 import SettingsPage from './components/Settings.vue'
+import PlatformShops from './components/PlatformShops.vue'
+import UniversalIntegration from './components/UniversalIntegration.vue'
+import LegalDetail from './components/LegalDetail.vue'
+import SchedulerPanel from './components/SchedulerPanel.vue'
+import ImageTools from './components/ImageTools.vue'
+import CompetitorAnalysis from './components/CompetitorAnalysis.vue'
+import UserMemory from './components/UserMemory.vue'
 
 const currentPage = ref('home')
 const sidebarVisible = ref(false)
+const legalDetailData = ref(null)
+const pendingCount = ref(0)
 
-const navItems = [
+const navItems = computed(() => [
   { id: 'home', label: '工作台', icon: LayoutDashboard },
+  { id: 'universal-integration', label: '自动对接', icon: Zap },
   { id: 'copywriter', label: '文案生成', icon: PenTool },
   { id: 'compliance', label: '合规审查', icon: ShieldCheck },
-  { id: 'customer-service', label: '客服应答', icon: MessageSquare, badge: '5' },
+  { id: 'customer-service', label: '客服应答', icon: MessageSquare, badge: pendingCount.value > 0 ? String(pendingCount.value) : null },
+  { id: 'platform-shops', label: '店铺管理', icon: Store },
   { id: 'legal', label: '法规检索', icon: FileText },
-  { id: 'logistics', label: '物流单据', icon: Package }
-]
+  { id: 'logistics', label: '物流单据', icon: Package },
+  { id: 'listing-manager', label: '商品管理', icon: ShoppingCart },
+  { id: 'competitor', label: '竞品分析', icon: Eye },
+  { id: 'image-tools', label: '图片处理', icon: Image },
+  { id: 'scheduler', label: '自动巡检', icon: Clock },
+])
 
 const pageComponents = {
   home: Dashboard,
+  'universal-integration': UniversalIntegration,
   copywriter: Copywriter,
   compliance: Compliance,
   'customer-service': CustomerService,
+  'platform-shops': PlatformShops,
   legal: Legal,
+  'legal-detail': LegalDetail,
   logistics: Logistics,
+  'listing-manager': ListingManager,
+  competitor: CompetitorAnalysis,
+  'image-tools': ImageTools,
+  scheduler: SchedulerPanel,
+  memory: UserMemory,
   settings: SettingsPage
 }
 
@@ -151,4 +177,13 @@ function navigateTo(pageId) {
   currentPage.value = pageId
   sidebarVisible.value = false
 }
+
+function navigateToLegalDetail(data) {
+  legalDetailData.value = data
+  currentPage.value = 'legal-detail'
+}
+
+provide('legalDetailData', legalDetailData)
+provide('navigateTo', navigateTo)
+provide('navigateToLegalDetail', navigateToLegalDetail)
 </script>

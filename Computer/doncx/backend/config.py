@@ -37,8 +37,8 @@ class Config:
 
     MODEL_NAME = os.environ.get('MODEL_NAME') or 'ep-20260405222155-5xsbr'
     TEMPERATURE = float(os.environ.get('TEMPERATURE') or 0.7)
-    MAX_TOKENS = int(os.environ.get('MAX_TOKENS') or 2000)
-    TIMEOUT = int(os.environ.get('TIMEOUT') or 120)
+    MAX_TOKENS = int(os.environ.get('MAX_TOKENS') or 4096)
+    TIMEOUT = int(os.environ.get('TIMEOUT') or 300)
 
     VOLC_CONTENT_AK = os.environ.get('VOLC_CONTENT_AK') or ''
     VOLC_CONTENT_SK = os.environ.get('VOLC_CONTENT_SK') or ''

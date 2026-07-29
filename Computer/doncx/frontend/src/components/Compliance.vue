@@ -58,20 +58,50 @@
 
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-2.5">上传图片（可选）</label>
-            <div class="border-2 border-dashed border-violet-200 rounded-xl p-6 text-center hover:border-violet-400 transition-colors cursor-pointer"
-                 @click="triggerFileInput">
+            <div
+              class="border-2 border-dashed border-violet-200 rounded-xl p-6 text-center hover:border-violet-400 transition-colors cursor-pointer"
+              @click="triggerFileInput"
+              @drop.prevent="handleDrop"
+              @dragover.prevent
+            >
               <ImageIcon class="w-10 h-10 text-violet-400 mx-auto mb-3" />
               <p class="text-sm text-slate-500">点击或拖拽上传图片</p>
-              <p class="text-xs text-slate-400 mt-1">支持 JPG、PNG、GIF 格式</p>
+              <p class="text-xs text-slate-400 mt-1">支持 JPG、PNG、GIF 格式，可多次上传累积</p>
             </div>
             <input type="file" ref="fileInput" class="hidden" multiple accept="image/*" @change="handleFileSelect" />
-          </div>
 
-          <div v-if="form.images.length > 0" class="flex flex-wrap gap-2">
-            <span v-for="(img, index) in form.images" :key="index"
-                  class="px-3 py-1 bg-violet-50 text-violet-600 text-xs rounded-full">
-              {{ img }}
-            </span>
+            <div v-if="form.images.length > 0" class="mt-4 space-y-3">
+              <div
+                v-for="(img, index) in form.images"
+                :key="img.id"
+                class="flex gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50"
+              >
+                <img :src="img.base64" class="w-16 h-16 object-cover rounded-md border bg-white" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-slate-700 truncate">{{ img.name }}</p>
+                    <button @click="removeImage(index)" class="text-slate-400 hover:text-red-500 transition-colors">
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1">
+                    {{ img.format }} · {{ img.width }}×{{ img.height }} · {{ formatSize(img.size) }}
+                  </p>
+                  <div v-if="img.analyzing" class="mt-2 flex items-center text-xs text-indigo-600">
+                    <span class="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mr-1.5"></span>
+                    正在识别图片内容...
+                  </div>
+                  <div v-else-if="img.text || img.description" class="mt-2 space-y-1">
+                    <p v-if="img.text" class="text-xs text-slate-600">
+                      <span class="font-medium">识别文字：</span>{{ img.text }}
+                    </p>
+                    <p v-if="img.description" class="text-xs text-slate-600">
+                      <span class="font-medium">图像描述：</span>{{ img.description }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="flex flex-wrap gap-3">
@@ -201,9 +231,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ShieldCheck, Image as ImageIcon, AlertTriangle, Copyright, XCircle, CheckCircle, Lightbulb, History, Trash2 } from 'lucide-vue-next'
-import { complianceAPI } from '../api/client'
+import { complianceAPI, complianceHistoryAPI } from '../api/client'
 import { ElMessage } from 'element-plus'
-import { complianceHistoryAPI } from '../api/client'
+
+let imageIdCounter = 0
 
 const loading = ref(false)
 const result = ref(null)
@@ -249,6 +280,21 @@ function restoreHistory(item) {
   form.check_copyright = opt.check_copyright !== false
   form.check_forbidden_words = opt.check_forbidden_words !== false
   result.value = item.result
+
+  // 恢复图片
+  form.images = (item.images || []).map(img => ({
+    id: ++imageIdCounter,
+    name: img.name || '图片',
+    base64: img.base64 || '',
+    text: img.text || '',
+    description: img.description || '',
+    format: img.format || '',
+    width: img.width || 0,
+    height: img.height || 0,
+    size: img.size || 0,
+    analyzing: false
+  }))
+
   showHistory.value = false
 }
 
@@ -274,9 +320,20 @@ function formatTime(value) {
   return value ? String(value) : ''
 }
 
+function formatSize(bytes) {
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+}
+
 function historySummary(item) {
   const c = (item.content || '').trim()
-  return c ? c.slice(0, 30) + (c.length > 30 ? '…' : '') : '空内容审查'
+  const imgCount = (item.images || []).length
+  if (c && imgCount) return `${c.slice(0, 30)}${c.length > 30 ? '…' : ''} · ${imgCount}张图`
+  if (c) return c.slice(0, 30) + (c.length > 30 ? '…' : '')
+  if (imgCount) return `仅图片 · ${imgCount}张`
+  return '空内容审查'
 }
 
 onMounted(() => {
@@ -287,17 +344,96 @@ function triggerFileInput() {
   fileInput.value?.click()
 }
 
-function handleFileSelect(event) {
-  const files = event.target.files
-  if (files) {
-    form.images = Array.from(files).map(f => f.name)
-    ElMessage.success(`已选择 ${files.length} 张图片`)
+function handleDrop(event) {
+  const files = event.dataTransfer.files
+  if (files?.length) {
+    processFiles(Array.from(files))
   }
 }
 
+function handleFileSelect(event) {
+  const files = event.target.files
+  if (files?.length) {
+    processFiles(Array.from(files))
+  }
+  // 清空 input，允许重复选择相同文件
+  event.target.value = ''
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+async function processFiles(files) {
+  const imageFiles = files.filter(f => f.type.startsWith('image/'))
+  if (!imageFiles.length) {
+    ElMessage.warning('请选择图片文件')
+    return
+  }
+
+  for (const file of imageFiles) {
+    const id = ++imageIdCounter
+    const base64 = await fileToBase64(file)
+    const image = {
+      id,
+      name: file.name,
+      base64,
+      text: '',
+      description: '',
+      format: '',
+      width: 0,
+      height: 0,
+      size: file.size,
+      analyzing: true
+    }
+    form.images.push(image)
+
+    // 自动识别图片内容
+    try {
+      const res = await complianceAPI.analyzeImage({
+        name: file.name,
+        base64
+      })
+      if (res.data?.success && res.data?.data) {
+        const data = res.data.data
+        image.text = data.text || ''
+        image.description = data.description || ''
+        image.format = data.format || ''
+        image.width = data.width || 0
+        image.height = data.height || 0
+        image.size = data.size || file.size
+
+        // 如果识别到文字，自动追加到商品文案中
+        if (image.text && !form.content.includes(image.text)) {
+          if (form.content.trim()) {
+            form.content += '\n\n'
+          }
+          form.content += `【图片识别：${file.name}】\n${image.text}`
+        }
+      }
+    } catch (e) {
+      console.error('图片识别失败', e)
+      ElMessage.warning(`图片「${file.name}」识别失败，仅作为附件提交`)
+    } finally {
+      image.analyzing = false
+    }
+  }
+
+  ElMessage.success(`已添加 ${imageFiles.length} 张图片`)
+}
+
+function removeImage(index) {
+  form.images.splice(index, 1)
+}
+
 async function startCompliance() {
-  if (!form.content.trim()) {
-    ElMessage.warning('请输入商品文案')
+  if (!form.content.trim() && !form.images.length) {
+    ElMessage.warning('请输入商品文案或上传图片')
     return
   }
 
@@ -305,7 +441,24 @@ async function startCompliance() {
   result.value = null
 
   try {
-    const response = await complianceAPI.scan(form)
+    const payload = {
+      content: form.content,
+      images: form.images.map(img => ({
+        name: img.name,
+        base64: img.base64,
+        text: img.text,
+        description: img.description,
+        format: img.format,
+        width: img.width,
+        height: img.height,
+        size: img.size
+      })),
+      check_extreme_words: form.check_extreme_words,
+      check_copyright: form.check_copyright,
+      check_forbidden_words: form.check_forbidden_words
+    }
+
+    const response = await complianceAPI.scan(payload)
     if (response.data.success) {
       result.value = response.data.data
       pushHistory({
@@ -313,7 +466,8 @@ async function startCompliance() {
         check_extreme_words: form.check_extreme_words,
         check_copyright: form.check_copyright,
         check_forbidden_words: form.check_forbidden_words,
-        result: response.data.data
+        result: response.data.data,
+        images: payload.images
       })
       if (result.value.overall_risk === 'high') {
         ElMessage.warning('检测到高风险问题')
@@ -334,3 +488,10 @@ async function startCompliance() {
   }
 }
 </script>
+
+<style scoped>
+/* 图片列表的缩略图不额外溢出 */
+img {
+  max-width: 100%;
+}
+</style>

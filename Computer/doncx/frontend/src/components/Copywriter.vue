@@ -24,6 +24,14 @@
         <Link class="w-4 h-4" />
         链接一键生成
       </button>
+      <button
+        @click="mode = 'batch'"
+        class="px-5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all flex items-center gap-2"
+        :class="mode === 'batch' ? 'border-violet-500 bg-violet-50 text-violet-600' : 'border-slate-200 text-slate-600 hover:border-violet-300'"
+      >
+        <Layers class="w-4 h-4" />
+        批量操作
+      </button>
     </div>
 
     <!-- 使用记录（本地持久化，刷新不丢） -->
@@ -56,6 +64,50 @@
       <p v-if="showHistory && !history.length" class="mt-3 text-sm text-slate-400">暂无使用记录，生成文案后会自动保存到这里</p>
     </div>
 
+    <!-- 品类与风格记忆看板 -->
+    <div class="mb-7 card p-4">
+      <div class="flex items-center justify-between">
+        <button @click="showStyleMemory = !showStyleMemory" class="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-violet-600 transition-colors">
+          <BookOpen class="w-4 h-4" />
+          品类记忆（{{ styleMemoryCount }} 条）
+        </button>
+        <button v-if="styleMemoryCount" @click="clearStyleMemory" class="text-xs text-slate-400 hover:text-red-500 transition-colors">清空记忆</button>
+      </div>
+      <div v-if="showStyleMemory && styleMemoryCount" class="mt-3">
+        <!-- 品类统计 -->
+        <div class="flex flex-wrap gap-2 mb-3">
+          <div
+            v-for="stat in categoryStats"
+            :key="stat.name"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+            :class="stat.name === '其他' ? 'bg-slate-100 text-slate-600' : 'bg-violet-50 text-violet-700 border border-violet-200'"
+          >
+            <span>{{ stat.name }}</span>
+            <span class="w-4 h-4 rounded-full bg-violet-200 text-violet-700 text-[10px] flex items-center justify-center">{{ stat.count }}</span>
+          </div>
+        </div>
+        <!-- 最近记忆列表 -->
+        <div class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin">
+          <div
+            v-for="item in recentStyleMemory"
+            :key="item.id"
+            class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-100 hover:border-violet-200 hover:bg-violet-50/30 transition-all"
+          >
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <span class="text-xs px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 font-medium shrink-0">{{ item.category }}</span>
+              <span class="text-xs text-slate-400 shrink-0">{{ item.platform.toUpperCase() }}</span>
+              <span class="text-xs text-slate-500 truncate">{{ item.title || item.productDesc }}</span>
+              <span class="text-[10px] text-slate-400 shrink-0">{{ formatTime(item.created_at) }}</span>
+            </div>
+            <button @click="removeStyleMemory(item.id)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+              <Trash2 class="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <p v-if="showStyleMemory && !styleMemoryCount" class="mt-3 text-sm text-slate-400">暂无品类记忆，生成文案后会自动记录品类和风格特征</p>
+    </div>
+
     <!-- ===================== 手动输入模式 ===================== -->
     <div v-if="mode === 'manual'" class="grid grid-cols-2 gap-7">
       <div class="card p-7">
@@ -66,9 +118,34 @@
             <label class="block text-sm font-semibold text-slate-700 mb-2.5">产品描述</label>
             <textarea
               v-model="form.product_desc"
+              @input="onProductDescChange"
               class="input-field w-full h-40 p-4 text-sm resize-none"
               placeholder="请输入中文产品描述，例如：白色2万毫安充电宝，带数显，支持双USB输出"
             ></textarea>
+            <!-- 风格记忆推荐 -->
+            <div v-if="styleRecommendations.length" class="mt-3">
+              <div class="flex items-center gap-1.5 mb-2">
+                <span class="text-xs font-semibold text-violet-600">📋 历史风格参考</span>
+                <span class="text-xs text-slate-400">（基于品类「{{ currentCategory }}」推荐）</span>
+              </div>
+              <div class="space-y-1.5">
+                <div
+                  v-for="rec in styleRecommendations"
+                  :key="rec.id"
+                  class="flex items-center gap-2 p-2 rounded-lg bg-violet-50/70 border border-violet-100 hover:border-violet-300 transition-all cursor-pointer"
+                  @click="applyStyleRecommendation(rec)"
+                  :title="'点击应用此风格'"
+                >
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-violet-200 text-violet-700 font-medium shrink-0">{{ rec.category }}</span>
+                  <span class="text-xs text-slate-500 shrink-0">{{ rec.platform.toUpperCase() }}</span>
+                  <span class="text-xs text-slate-400 shrink-0">{{ rec.language.toUpperCase() }}</span>
+                  <span class="text-xs text-slate-500 truncate flex-1">{{ rec.title || rec.productDesc }}</span>
+                  <span class="text-[10px] text-slate-400 shrink-0">{{ formatTime(rec.created_at) }}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-violet-100 text-violet-600 shrink-0">{{ rec.styleFeatures?.title_style || '—' }}</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">点击可快速填充对应平台和语言，点击「智能生成」即可沿用类似风格</p>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -124,7 +201,7 @@
           >
             <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <Sparkles v-else class="w-5 h-5" />
-            {{ loading ? '生成中...' : '智能生成文案' }}
+            {{ loading ? 'AI 生成中（约 30~60 秒，请耐心等待）...' : '智能生成文案' }}
           </button>
         </div>
       </div>
@@ -159,6 +236,20 @@
               <Languages class="w-4 h-4" />
               切换语言
             </button>
+            <button
+              @click="scanComplianceNow"
+              :disabled="!result || complianceScanning"
+              class="px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all"
+              :class="[
+                result && !complianceScanning
+                  ? 'btn-outline border-amber-300 text-amber-700 hover:bg-amber-50'
+                  : 'border-2 border-slate-200 text-slate-400 cursor-not-allowed'
+              ]"
+            >
+              <span v-if="complianceScanning" class="w-4 h-4 border-2 border-amber-300/30 border-t-amber-500 rounded-full animate-spin"></span>
+              <ShieldCheck v-else class="w-4 h-4" />
+              {{ complianceScanning ? '合规扫描中...' : (result?.compliance_scan ? '重新合规扫描' : '合规扫描') }}
+            </button>
           </div>
         </div>
 
@@ -170,26 +261,37 @@
         </div>
 
         <div v-else class="space-y-6">
-          <div v-if="result.compliance" class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <span
-              v-if="result.compliance.rewritten"
+              v-if="result.compliance?.rewritten"
               class="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200"
             >
               已自动合规改写（{{ result.compliance.notes?.length || 0 }} 处）
             </span>
             <span
-              v-else
-              class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200"
+              v-else-if="result.compliance_scan"
+              :class="[
+                'px-2.5 py-1 rounded-full text-xs font-medium border',
+                result.compliance?.risk === 'high' ? 'bg-red-100 text-red-700 border-red-200'
+                  : result.compliance?.risk === 'medium' ? 'bg-amber-100 text-amber-700 border-amber-200'
+                  : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+              ]"
             >
-              已通过生成端合规自检
+              合规扫描：{{ result.compliance?.risk === 'high' ? '存在高风险' : result.compliance?.risk === 'medium' ? '存在中风险' : '已通过' }}
+            </span>
+            <span
+              v-else
+              class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200"
+            >
+              ⏱ 未做合规扫描（生成更快，可点击「合规扫描」按钮按需检测）
             </span>
           </div>
 
           <div
-            v-if="result.compliance?.rewritten && result.compliance.notes?.length"
+            v-if="result.compliance_scan && !result.compliance_scan.clean && result.compliance?.notes?.length"
             class="text-xs text-amber-700 bg-amber-50 rounded-lg p-3 border border-amber-100"
           >
-            <p class="font-medium mb-1">自动改写记录：</p>
+            <p class="font-medium mb-1">合规扫描建议：</p>
             <ul class="list-disc list-inside space-y-0.5">
               <li v-for="(note, i) in result.compliance.notes" :key="i">{{ note }}</li>
             </ul>
@@ -227,7 +329,7 @@
     </div>
 
     <!-- ===================== 链接一键生成模式 ===================== -->
-    <div v-else>
+    <div v-else-if="mode === 'link'">
       <!-- 输入区 -->
       <div class="card p-7 mb-7">
         <h3 class="text-lg font-bold text-slate-900 mb-6">1688 商品链接</h3>
@@ -248,7 +350,7 @@
           >
             <span v-if="linkLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <Zap v-else class="w-4 h-4" />
-            {{ linkLoading ? '智能生成中...' : '一键生成上架文案' }}
+            {{ linkLoading ? 'AI 生成中（约 1~2 分钟，请耐心等待）...' : '一键生成上架文案' }}
           </button>
         </div>
         <p v-if="linkError" class="text-xs text-red-500 mt-2">{{ linkError }}</p>
@@ -576,9 +678,160 @@
               </button>
             </div>
             <pre class="bg-slate-900 text-slate-100 rounded-xl p-5 text-sm leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-96">{{ currentFinal.text }}</pre>
+
+            <!-- 自动上架 -->
+            <div class="mt-5 border-t border-slate-200 pt-5">
+              <h5 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <Store class="w-4 h-4 text-violet-500" />全自动上架到店铺
+              </h5>
+              <div class="flex flex-col md:flex-row gap-3">
+                <el-select v-model="selectedShopId" placeholder="选择店铺" style="min-width: 200px">
+                  <el-option v-for="shop in shopList" :key="shop.id" :label="`${shop.name} (${shop.platform.toUpperCase()})`" :value="shop.id" />
+                </el-select>
+                <el-input v-model="publishSku" placeholder="输入店铺 SKU" style="max-width: 200px" />
+                <button @click="publishToShop" :disabled="publishLoading" class="btn-primary px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                  <Zap v-if="!publishLoading" class="w-4 h-4" />
+                  <span>{{ publishLoading ? '提交中...' : '上架到选中店铺' }}</span>
+                </button>
+              </div>
+              <p v-if="shopList.length === 0" class="text-xs text-slate-400 mt-2">暂无店铺，请先到「店铺管理」添加 Amazon/Temu 店铺。</p>
+            </div>
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 批量操作模式 ===================== -->
+  <div v-if="mode === 'batch'">
+    <div class="grid grid-cols-2 gap-7">
+      <!-- 输入区 -->
+      <div class="card p-7">
+        <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+          <Layers class="w-5 h-5 text-violet-600" />
+          批量操作
+        </h3>
+        <p class="text-sm text-slate-500 mb-5">每行一个产品描述或文案，系统将自动批量处理。</p>
+
+        <div class="flex gap-2 mb-4">
+          <button
+            @click="batchMode = 'copywriter'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="batchMode === 'copywriter' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          >批量文案生成</button>
+          <button
+            @click="batchMode = 'compliance'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="batchMode === 'compliance' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          >批量合规扫描</button>
+        </div>
+
+        <label class="block text-sm font-semibold text-slate-700 mb-2">
+          {{ batchMode === 'copywriter' ? '产品描述列表（每行一个）' : '文案内容列表（每行一个）' }}
+        </label>
+        <textarea
+          v-model="batchInput"
+          rows="12"
+          class="input-field w-full mb-4"
+          :placeholder="batchMode === 'copywriter' ? '例如：\n无线蓝牙耳机 降噪 长续航\nType-C 数据线 快充 1米\n手机支架 桌面 金属' : '例如：\n最好的无线蓝牙耳机，全场最低价\n...'"
+        ></textarea>
+
+        <div v-if="batchMode === 'copywriter'" class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">目标平台</label>
+            <select v-model="batchPlatform" class="input-field w-full">
+              <option value="amazon">Amazon</option>
+              <option value="temu">Temu</option>
+              <option value="ebay">eBay</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">目标语言</label>
+            <select v-model="batchLanguage" class="input-field w-full">
+              <option value="en">英文</option>
+              <option value="zh">中文</option>
+              <option value="ja">日文</option>
+              <option value="de">德文</option>
+              <option value="fr">法文</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="batchMode === 'compliance'" class="space-y-2 mb-4">
+          <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" v-model="batchCheckExtreme" class="rounded border-slate-300" /> 检测极限词
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" v-model="batchCheckCopyright" class="rounded border-slate-300" /> 检测版权/商标
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" v-model="batchCheckForbidden" class="rounded border-slate-300" /> 检测违禁词
+          </label>
+        </div>
+
+        <button
+          @click="runBatch"
+          :disabled="batchLoading || !batchInput.trim()"
+          class="btn-primary w-full flex items-center justify-center gap-2"
+        >
+          <Loader2 v-if="batchLoading" class="w-4 h-4 animate-spin" />
+          <Layers v-else class="w-4 h-4" />
+          {{ batchLoading ? `处理中 ${batchProgress}/${batchTotal}` : '开始批量处理' }}
+        </button>
+
+        <div v-if="batchLoading" class="mt-4">
+          <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-violet-600 transition-all duration-300"
+              :style="{ width: batchTotal ? (batchProgress / batchTotal * 100) + '%' : '0%' }"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 结果区 -->
+      <div class="card p-7">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-slate-900">处理结果</h3>
+          <div class="flex gap-2">
+            <button v-if="batchResults.length" @click="exportBatchCSV" class="btn-outline text-sm flex items-center gap-1">
+              <Download class="w-4 h-4" /> 导出 CSV
+            </button>
+            <button v-if="batchResults.length" @click="batchResults = []" class="text-slate-400 hover:text-red-500 text-sm">
+              <Trash2 class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div v-if="!batchResults.length" class="text-center py-16 text-slate-400">
+          <Layers class="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>批量处理结果将显示在这里</p>
+        </div>
+
+        <div v-else class="space-y-4 max-h-[700px] overflow-y-auto pr-2">
+          <div
+            v-for="(item, idx) in batchResults"
+            :key="idx"
+            class="border border-slate-200 rounded-xl p-4"
+            :class="item.error ? 'bg-red-50 border-red-200' : 'bg-slate-50'"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono text-slate-400">#{{ idx + 1 }}</span>
+              <span
+                v-if="batchMode === 'compliance'"
+                class="text-xs px-2 py-0.5 rounded-full"
+                :class="item.pass ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'"
+              >{{ item.pass ? '通过' : '未通过' }}</span>
+            </div>
+            <p class="text-sm text-slate-700 mb-2 line-clamp-2">{{ item.input }}</p>
+            <div v-if="batchMode === 'copywriter' && item.result" class="text-sm text-slate-800 whitespace-pre-wrap bg-white border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto">{{ item.result }}</div>
+            <div v-if="batchMode === 'compliance' && item.issues?.length" class="space-y-1">
+              <p v-for="(issue, i) in item.issues" :key="i" class="text-sm text-red-600">• {{ issue }}</p>
+            </div>
+            <p v-if="item.error" class="text-sm text-red-600 mt-2">{{ item.error }}</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -588,15 +841,20 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import {
   PenTool, ShoppingCart, Tag, Globe, Sparkles, Copy, Languages,
-  Link, Zap, AlertTriangle, Copyright, XCircle, Lightbulb, History, Trash2
+  Link, Zap, AlertTriangle, Copyright, XCircle, Lightbulb, History, Trash2, Store, ShieldCheck, BookOpen, Layers, Loader2, Download
 } from 'lucide-vue-next'
-import { copywriterAPI } from '../api/client'
-import { autoListingAPI } from '../api/client'
+import { copywriterAPI, autoListingAPI, copywriterHistoryAPI, platformAPI, complianceAPI, batchAPI } from '../api/client'
 import { ElMessage } from 'element-plus'
-import { copywriterHistoryAPI } from '../api/client'
+import { styleMemory } from '../store/styleMemory'
+import { copywriterStore } from '../store/copywriterStore'
 
-const loading = ref(false)
-const result = ref(null)
+// 从全局 store 读取状态（切换页面后生成仍在后台进行，回来时自动恢复）
+const loading = computed({
+  get: () => copywriterStore.state.manualLoading,
+  set: (v) => {}  // 只读，由 store 控制
+})
+const result = computed(() => copywriterStore.state.manualResult)
+const complianceScanning = ref(false)
 
 const form = reactive({
   product_desc: '',
@@ -623,17 +881,81 @@ const mode = ref('manual')
 const linkUrl = ref('')
 const linkError = ref('')
 const isValidLink = ref(false)
-const linkLoading = ref(false)
-const linkResult = ref(null)
-const linkResultError = ref('')
+// 链接生成状态从全局 Store 读取（切换页面后生成仍在后台继续）
+const linkLoading = computed(() => copywriterStore.state.linkLoading)
+const linkResult = computed(() => copywriterStore.state.linkResult)
+const linkResultError = computed(() => copywriterStore.state.linkError)
 const activeListingLang = ref('en')
 const activeComplianceLang = ref('en')
 const activeFinalLang = ref('en')
+
+// ============ 批量操作相关状态 ============
+const batchMode = ref('copywriter')
+const batchInput = ref('')
+const batchPlatform = ref('amazon')
+const batchLanguage = ref('en')
+const batchCheckExtreme = ref(true)
+const batchCheckCopyright = ref(true)
+const batchCheckForbidden = ref(true)
+const batchLoading = ref(false)
+const batchProgress = ref(0)
+const batchTotal = ref(0)
+const batchResults = ref([])
+
+// ============ 自动上架到店铺 ============
+const selectedShopId = ref(null)
+const shopList = ref([])
+const publishLoading = ref(false)
+const publishSku = ref('')
 
 // ============ 使用记录（后端持久化） ============
 const HISTORY_MAX = 50
 const showHistory = ref(false)
 const history = ref([])
+
+// ============ 品类与风格记忆 ============
+const showStyleMemory = ref(false)
+const styleMemoryCount = ref(0)
+const categoryStats = ref([])
+const recentStyleMemory = ref([])
+const styleRecommendations = ref([])
+const currentCategory = ref('')
+
+function refreshStyleMemory() {
+  styleMemoryCount.value = styleMemory.getCount()
+  categoryStats.value = styleMemory.getCategoryStats()
+  const all = styleMemory.getAll()
+  recentStyleMemory.value = all.slice(0, 20)
+}
+
+function onProductDescChange() {
+  const desc = form.product_desc.trim()
+  if (desc.length >= 4) {
+    currentCategory.value = styleMemory.extractCategory(desc)
+    styleRecommendations.value = styleMemory.recommend(desc, 5)
+  } else {
+    currentCategory.value = ''
+    styleRecommendations.value = []
+  }
+}
+
+function applyStyleRecommendation(rec) {
+  form.platform = rec.platform
+  form.target_language = rec.language
+  ElMessage.success(`已应用 ${rec.category} 品类风格（${rec.platform.toUpperCase()} / ${rec.language.toUpperCase()}）`)
+}
+
+function clearStyleMemory() {
+  styleMemory.clear()
+  refreshStyleMemory()
+  styleRecommendations.value = []
+  ElMessage.success('品类记忆已清空')
+}
+
+function removeStyleMemory(id) {
+  styleMemory.remove(id)
+  refreshStyleMemory()
+}
 
 async function loadHistory() {
   try {
@@ -657,14 +979,14 @@ async function pushHistory(record) {
 
 function restoreHistory(item) {
   if (item.mode === 'link') {
-    linkResult.value = item.result
+    copywriterStore.restoreLinkResult(item.result)
     linkUrl.value = item.input_text || ''
     mode.value = 'link'
   } else {
     form.product_desc = item.input_text || ''
     form.platform = item.platform || 'amazon'
     form.target_language = item.language || 'en'
-    result.value = item.result
+    copywriterStore.restoreManualResult(item.result)
     mode.value = 'manual'
   }
   showHistory.value = false
@@ -700,9 +1022,153 @@ function historySummary(item) {
   return desc ? desc.slice(0, 30) + (desc.length > 30 ? '…' : '') : '手动生成'
 }
 
+// ============ 批量操作 ============
+async function runBatch() {
+  const lines = batchInput.value.split('\n').map(s => s.trim()).filter(Boolean)
+  if (!lines.length) return
+  batchLoading.value = true
+  batchTotal.value = lines.length
+  batchProgress.value = 0
+  batchResults.value = []
+
+  try {
+    if (batchMode.value === 'copywriter') {
+      const res = await batchAPI.generate({
+        items: lines.map(text => ({ product_desc: text })),
+        platform: batchPlatform.value,
+        target_language: batchLanguage.value
+      })
+      if (res.data.success) {
+        batchResults.value = (res.data.data || []).map((r, i) => {
+          let resultText = ''
+          if (r.success && r.data) {
+            const d = r.data
+            resultText = [d.title, (d.bullet_points || []).join('\n'), d.description].filter(Boolean).join('\n\n')
+          }
+          return {
+            input: lines[i],
+            result: resultText,
+            error: r.error
+          }
+        })
+      } else {
+        alert(res.data.message || '批量生成失败')
+      }
+    } else {
+      const res = await batchAPI.complianceScan({
+        items: lines.map(text => ({ text })),
+        check_extreme_words: batchCheckExtreme.value,
+        check_copyright: batchCheckCopyright.value,
+        check_forbidden_words: batchCheckForbidden.value
+      })
+      if (res.data.success) {
+        batchResults.value = (res.data.data || []).map((r, i) => {
+          const d = r.data || {}
+          return {
+            input: lines[i],
+            pass: d.pass,
+            issues: d.issues || [],
+            error: r.error
+          }
+        })
+      } else {
+        alert(res.data.message || '批量合规扫描失败')
+      }
+    }
+  } catch (e) {
+    console.error('批量处理失败', e)
+    alert('批量处理失败：' + (e.message || '网络错误'))
+  } finally {
+    batchLoading.value = false
+    batchProgress.value = batchTotal.value
+  }
+}
+
+function exportBatchCSV() {
+  const rows = batchResults.value.map((item, idx) => {
+    if (batchMode.value === 'copywriter') {
+      return [`#${idx + 1}`, item.input.replace(/"/g, '""'), (item.result || '').replace(/"/g, '""'), item.error || '']
+    } else {
+      return [`#${idx + 1}`, item.input.replace(/"/g, '""'), item.pass ? '通过' : '未通过', (item.issues || []).join('; ').replace(/"/g, '""')]
+    }
+  })
+  const headers = batchMode.value === 'copywriter'
+    ? ['序号', '输入', '生成结果', '错误']
+    : ['序号', '输入', '合规结果', '问题']
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `batch-${batchMode.value}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 onMounted(() => {
   loadHistory()
+  loadShops()
+  refreshStyleMemory()
 })
+
+async function loadShops() {
+  try {
+    const res = await platformAPI.list()
+    if (res.data.success) {
+      shopList.value = res.data.data || []
+      if (shopList.value.length && !selectedShopId.value) {
+        selectedShopId.value = shopList.value[0].id
+      }
+    }
+  } catch (e) {
+    console.error('加载店铺失败', e)
+  }
+}
+
+async function publishToShop() {
+  if (!selectedShopId.value) {
+    ElMessage.warning('请先选择店铺')
+    return
+  }
+  if (!publishSku.value.trim()) {
+    ElMessage.warning('请输入 SKU')
+    return
+  }
+  const shop = shopList.value.find(s => s.id === selectedShopId.value)
+  if (!shop) {
+    ElMessage.warning('店铺不存在')
+    return
+  }
+  const f = currentFinal.value
+  if (!f) {
+    ElMessage.warning('当前无可上架文本')
+    return
+  }
+  publishLoading.value = true
+  try {
+    const payload = {
+      sku: publishSku.value.trim(),
+      title: f.title,
+      bullet_points: f.bullet_points,
+      description: f.description,
+      price: 0,
+      stock: 0,
+      product_type: 'PRODUCT'
+    }
+    const res = await platformAPI.publishListing(selectedShopId.value, payload)
+    if (res.data.success) {
+      ElMessage.success(`已提交到 ${shop.name}: ${res.data.data?.message || '成功'}`)
+    } else {
+      ElMessage.error('上架失败：' + (res.data.message || '未知错误'))
+    }
+  } catch (e) {
+    ElMessage.error('上架失败：' + (e.response?.data?.message || e.message))
+  } finally {
+    publishLoading.value = false
+  }
+}
 
 const listingLangs = [
   { value: 'en', label: '英语 EN' },
@@ -758,34 +1224,28 @@ async function generateFromLink() {
     return
   }
 
-  linkLoading.value = true
-  linkResult.value = null
-  linkResultError.value = ''
-
-  try {
-    const response = await autoListingAPI.generate({ url: linkUrl.value.trim() })
-    if (response.data.success) {
-      linkResult.value = response.data.data
-      pushHistory({
-        mode: 'link',
-        platform: '1688',
-        language: '',
-        input_text: linkUrl.value.trim(),
-        result: response.data.data
-      })
-      ElMessage.success('上架文案已生成')
-    } else {
-      const msg = response.data.message || '生成失败'
-      linkResultError.value = msg
-      ElMessage.error(msg)
-    }
-  } catch (error) {
-    console.error(error)
-    const errorMsg = error.response?.data?.message || error.message || '生成过程中发生错误'
-    linkResultError.value = errorMsg
-    ElMessage.error(errorMsg)
-  } finally {
-    linkLoading.value = false
+  const res = await copywriterStore.generateFromLink(linkUrl.value.trim())
+  if (res.success) {
+    pushHistory({
+      mode: 'link',
+      platform: '1688',
+      language: '',
+      input_text: linkUrl.value.trim(),
+      result: res.data.data
+    })
+    // 记录品类与风格记忆（从抓取标题中提取品类）
+    const scrapedTitle = res.data.data?.raw_scraped?.title || linkUrl.value.trim()
+    styleMemory.record({
+      productDesc: scrapedTitle,
+      platform: '1688',
+      language: 'en',
+      result: res.data.data?.listings?.en || res.data.data,
+      mode: 'link',
+    })
+    refreshStyleMemory()
+    ElMessage.success('上架文案已生成')
+  } else {
+    ElMessage.error(res.error || '生成失败')
   }
 }
 
@@ -946,30 +1406,27 @@ async function generateCopy() {
     return
   }
 
-  loading.value = true
-  result.value = null
-
-  try {
-    const response = await copywriterAPI.generate(form)
-    if (response.data.success) {
-      result.value = response.data.data
-      pushHistory({
-        mode: 'manual',
-        platform: form.platform,
-        language: form.target_language,
-        input_text: form.product_desc,
-        result: response.data.data
-      })
-      ElMessage.success('文案生成成功')
-    } else {
-      ElMessage.error(response.data.message || '文案生成失败')
-    }
-  } catch (error) {
-    console.error(error)
-    const errorMsg = error.response?.data?.message || error.message || '生成过程中发生错误'
-    ElMessage.error(errorMsg)
-  } finally {
-    loading.value = false
+  const res = await copywriterStore.generateCopy(form)
+  if (res.success) {
+    pushHistory({
+      mode: 'manual',
+      platform: form.platform,
+      language: form.target_language,
+      input_text: form.product_desc,
+      result: res.data.data
+    })
+    // 记录品类与风格记忆
+    styleMemory.record({
+      productDesc: form.product_desc,
+      platform: form.platform,
+      language: form.target_language,
+      result: res.data.data,
+      mode: 'manual',
+    })
+    refreshStyleMemory()
+    ElMessage.success('文案生成成功')
+  } else {
+    ElMessage.error(res.error || '文案生成失败')
   }
 }
 
@@ -982,27 +1439,16 @@ async function translateCopy() {
   const targetLang = otherLanguages[0].value
   form.target_language = targetLang
 
-  loading.value = true
-
-  try {
-    const response = await copywriterAPI.translate({
-      title: result.value.title,
-      bullet_points: result.value.bullet_points,
-      description: result.value.description,
-      target_language: targetLang
-    })
-
-    if (response.data.success) {
-      result.value = response.data.data
-      ElMessage.success('翻译成功')
-    } else {
-      ElMessage.error('翻译失败')
-    }
-  } catch (error) {
-    console.error(error)
-    ElMessage.error('翻译过程中发生错误')
-  } finally {
-    loading.value = false
+  const res = await copywriterStore.translateCopy({
+    title: result.value.title,
+    bullet_points: result.value.bullet_points,
+    description: result.value.description,
+    target_language: targetLang
+  })
+  if (res.success) {
+    ElMessage.success('翻译成功')
+  } else {
+    ElMessage.error(res.error || '翻译失败')
   }
 }
 
@@ -1017,6 +1463,43 @@ async function copyAll() {
   } catch (error) {
     console.error(error)
     ElMessage.error('复制失败')
+  }
+}
+
+// 手动触发合规扫描（默认生成时不跑，节省 30-60 秒）
+async function scanComplianceNow() {
+  if (!result.value || complianceScanning.value) return
+  complianceScanning.value = true
+  try {
+    const text = `标题：${result.value.title}\n卖点：${(result.value.bullet_points || []).join('；')}\n描述：${result.value.description}`
+    const res = await complianceAPI.scan({
+      content: text,
+      check_extreme_words: true,
+      check_copyright: true,
+      check_forbidden_words: true
+    })
+    const scan = res.data?.data || res.data || {}
+    // 合并到 result，触发模板更新
+    copywriterStore.updateManualResult({
+      ...result.value,
+      compliance_scan: scan,
+      compliance: {
+        original_clean: scan.clean !== false,
+        rewritten: false,
+        notes: scan.suggestions || [],
+        risk: scan.overall_risk || 'low'
+      }
+    })
+    if (scan.clean) {
+      ElMessage.success('合规扫描完成，未发现风险')
+    } else {
+      ElMessage.warning(`合规扫描完成，风险等级：${scan.overall_risk || 'medium'}，请查看下方详情`)
+    }
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('合规扫描失败：' + (e.response?.data?.message || e.message))
+  } finally {
+    complianceScanning.value = false
   }
 }
 </script>

@@ -67,6 +67,47 @@ class PromptManager:
 5. 仅输出 JSON；
 6. 去除极限词、医疗/健康功效宣称、无证据的百分比提升、贬低竞品等违规表述，保持客观可验证。"""
 
+    def get_manual_reply_translate_prompt(self, manual_reply, customer_message, platform):
+        """
+        人工客服回复自动翻译成客户咨询语言。
+        先判断客户消息语言，再把人工回复译成该语言；若客户消息为中文则无需翻译。
+        """
+        platform_rules = {
+            'amazon': 'Amazon（默认英语，但需按客户实际语言回复）',
+            'ebay': 'eBay（默认英语）',
+            'aliexpress': 'AliExpress（可能为多语言，常见俄语、西班牙语、法语、英语等）',
+            'local-shop': '通用电商（按客户语言回复）',
+            'temu': 'Temu（默认英语）',
+            'tiktok': 'TikTok Shop（默认英语）',
+            'shopee': 'Shopee（东南亚多语言）',
+            'lazada': 'Lazada（东南亚多语言）'
+        }
+        platform_hint = platform_rules.get(platform, '通用电商（按客户语言回复）')
+
+        return f"""你是一位跨境电商客服翻译助手。请将商家手写的人工客服回复翻译成客户咨询时使用的语言，方便客户直接阅读。
+
+客户咨询消息：
+{customer_message}
+
+平台：{platform_hint}
+
+商家手写人工回复（可能是中文）：
+{manual_reply}
+
+任务要求：
+1. 首先判断客户咨询消息的主要语言（例如：英语、西班牙语、德语、法语、俄语、日语、简体中文等）；
+2. 将「商家手写人工回复」翻译成该语言；
+3. 若客户消息本身就是中文，则 translated_reply 与 manual_reply 保持一致；
+4. 保持原意、语气友好专业，符合电商客服风格；
+5. 不要添加原文中没有的解释或额外内容。
+
+请仅输出以下格式的 JSON（不要输出任何额外解释或 Markdown 标记）：
+{{
+  "detected_language": "检测到的语言代码，如 en/es/de/fr/ru/ja/zh",
+  "language_name": "语言名称，如 英语/西班牙语/德语",
+  "translated_reply": "翻译后的人工回复，供客户直接阅读"
+}}"""
+
     def get_translate_prompt(self, title, bullet_points, description, target_language):
         language_map = {
             'en': 'English',
@@ -149,7 +190,7 @@ class PromptManager:
   "description": "改写后的描述内容"
 }}"""
     
-    def get_compliance_prompt(self, content, check_extreme_words, check_copyright, check_forbidden_words):
+    def get_compliance_prompt(self, content, check_extreme_words, check_copyright, check_forbidden_words, image_texts=''):
         checks = []
         if check_extreme_words:
             checks.append('极限词检测（如：最、第一、顶级、唯一等）')
@@ -158,9 +199,17 @@ class PromptManager:
         if check_forbidden_words:
             checks.append('违禁词检测（平台禁止使用的词汇）')
         
+        image_section = ''
+        if image_texts:
+            image_section = f"""
+
+用户还上传了以下图片，并已经过识别。请结合图片中的文字和描述一并审查：
+{image_texts}
+"""
+
         return f"""你是一个跨境电商合规审查专家。请审查以下文案内容，检测以下风险：{', '.join(checks)}。
 
-待审查文案：{content}
+待审查文案：{content}{image_section}
 
 请输出以下格式的JSON：
 {{
@@ -176,10 +225,14 @@ class PromptManager:
         platform_rules = {
             'amazon': '亚马逊客服规则：友好专业，24小时内回复，提供明确解决方案',
             'ebay': 'eBay客服规则：及时礼貌，积极解决问题',
-            'aliexpress': '速卖通客服规则：中文沟通，详细解答，提供物流追踪'
+            'aliexpress': '速卖通客服规则：中文沟通，详细解答，提供物流追踪',
+            'local-shop': '通用电商客服规则：友好专业，及时回复，提供明确解决方案',
+            'temu': 'Temu客服规则：友好专业，积极解决问题'
         }
         
-        return f"""你是一个跨境电商客服助手。请根据{platform_rules[platform]}处理以下客户咨询。
+        rules = platform_rules.get(platform, '通用电商客服规则：友好专业，及时回复，提供明确解决方案')
+        
+        return f"""你是一个跨境电商客服助手。请根据{rules}处理以下客户咨询。
 
 客户消息：{message}
 
@@ -189,14 +242,84 @@ class PromptManager:
 3. 回复简洁克制，控制在 2-4 句话，直奔主题，不要堆砌套话；
 4. 若问题需要卖家才能确认的信息（如具体物流状态、退款审批、补偿方案），不要编造，给出诚实的临时安抚并说明将转交人工，status 设为 "pending"；
 5. 若可基于通用规范直接解答（如兼容性、使用说明、通用退货政策），给出明确答复，status 设为 "auto_replied"；
-6. 额外输出一段简体中文翻译 response_zh，与 response 内容一致，供商家核对回复是否准确。
+6. 额外输出一段简体中文翻译 response_zh，与 response 内容一致，供商家核对回复是否准确；
+7. message_zh：将客户的原消息翻译成简体中文，供商家快速理解客户咨询内容。若原消息已经是中文，则 message_zh 与 message 一致。
 
 请输出以下格式的 JSON（不要输出任何额外解释或 Markdown 标记）：
 {{
+  "message_zh": "客户原消息的简体中文翻译",
   "response": "用客户语言写成的自动回复（简洁真实）",
   "response_zh": "上述 reply 的简体中文翻译，供商家核对",
   "status": "auto_replied" | "pending"
 }}"""
+
+    def get_rag_customer_service_prompt(self, message, platform, knowledge_context, memory_context, buyer_history_context=''):
+        """
+        RAG 增强版客服提示词 —— 注入检索到的知识库、买家历史对话、同类咨询参考
+        knowledge_context: str，检索到的知识条目
+        memory_context: str，语义检索到的同类历史对话（可能来自其他客户）
+        buyer_history_context: str，该买家本人的历史对话（精确匹配 buyer_id）
+        """
+        platform_rules = {
+            'amazon': '亚马逊客服规则：友好专业，24小时内回复，提供明确解决方案',
+            'ebay': 'eBay客服规则：及时礼貌，积极解决问题',
+            'aliexpress': '速卖通客服规则：中文沟通，详细解答，提供物流追踪',
+            'local-shop': '通用电商客服规则：友好专业，及时回复，提供明确解决方案',
+            'temu': 'Temu客服规则：友好专业，积极解决问题'
+        }
+        rules = platform_rules.get(platform, '通用电商客服规则：友好专业，及时回复，提供明确解决方案')
+
+        kb_section = ""
+        buyer_section = ""
+        mem_section = ""
+
+        if knowledge_context:
+            kb_section = f"""
+【店铺专属知识库（以下信息为本店铺真实规则，请优先参考）】
+{knowledge_context}
+"""
+
+        if buyer_history_context:
+            buyer_section = f"""
+【此客户的历史对话（以下是该客户本人之前的咨询记录，请保持上下文连贯、记住客户身份和之前沟通的内容）】
+{buyer_history_context}
+"""
+
+        if memory_context:
+            mem_section = f"""
+【同类咨询参考（以下为其他客户类似咨询的处理方式，可供风格参考，但不要将其内容误认为是当前客户的个人历史）】
+{memory_context}
+"""
+
+        return f"""你是一个跨境电商客服助手，服务于一家真实运营中的店铺。请根据{rules}处理以下客户咨询。
+
+{kb_section}{buyer_section}{mem_section}
+客户消息：{message}
+
+严格要求：
+1. 回复使用与客户消息相同的语言（客户用英语则回复英语，用西班牙语则回复西班牙语；无法确定时默认英语）；
+2. 优先依据【店铺专属知识库】中的信息作答：退换货政策、FAQ、商品信息等必须以知识库为准，不得凭空编造；
+3. 若有【此客户的历史对话】，说明该客户是回头客：必须结合该客户之前咨询的内容做连贯回复，可自然提及之前处理过的问题和结论（如"根据我们上次沟通的情况..."），不要像第一次接触一样回复；
+4. 若有【同类咨询参考】，仅作遣词造句风格参考，不要将其他客户的个人信息或订单状态代入当前回复；
+5. 回复简洁克制，控制在 2-4 句话，直奔主题，不要堆砌套话；
+6. 若问题超出知识库覆盖范围且需要卖家确认（如具体物流状态、退款审批、补偿方案），不要编造，给出诚实的临时安抚并说明将转交人工，status 设为 "pending"；
+7. 若可基于知识库或通用规范直接解答，给出明确答复，status 设为 "auto_replied"；
+8. 额外输出一段简体中文翻译 response_zh，与 response 内容一致，供商家核对回复是否准确；
+9. message_zh：将客户的原消息翻译成简体中文，供商家快速理解客户咨询内容。若原消息已经是中文，则 message_zh 与 message 一致。
+
+请输出以下格式的 JSON（不要输出任何额外解释、注释、Markdown 标记、示例或多个版本；只输出一段可被直接解析的 JSON）：
+{{
+  "message_zh": "客户原消息的简体中文翻译",
+  "response": "用客户语言写成的自动回复（简洁真实，优先依据知识库，回头客保持上下文连贯）",
+  "response_zh": "上述 reply 的简体中文翻译，供商家核对",
+  "status": "auto_replied" | "pending"
+}}
+
+输出约束：
+- 仅输出一个 JSON 对象；
+- 不要加 "注："、"更正说明"、"最终按规则输出" 等额外文字；
+- 不要输出任何 Markdown 代码块标记（如 ```json）；
+- status 字段必须是字符串 "auto_replied" 或 "pending"，不要带其他描述。"""
     
     def get_legal_search_prompt(self, query, regions):
         return f"""你是一个跨境电商法律专家。请搜索关于"{query}"的法律法规信息。

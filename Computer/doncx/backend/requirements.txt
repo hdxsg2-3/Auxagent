@@ -2,6 +2,20 @@ flask==2.3.3
 flask-cors==4.0.0
 requests==2.31.0
 marshmallow==3.21.0
+boto3>=1.28.0
+
+# RAG 知识库依赖
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
+numpy>=1.24.0
+
+# 图片处理
+Pillow>=10.0.0
+
+# 可选：本地 OCR（需要系统安装 Tesseract 引擎）
+# pytesseract>=0.3.10
 
 # 可选：安装 Playwright 可大幅提升 1688 等反爬站点的抓取成功率
+# 同时也是浏览器自动化兜底方案的核心依赖（未安装时自动降级为模拟模式）
+# 安装步骤：pip install playwright && playwright install chromium
 # playwright>=1.40.0

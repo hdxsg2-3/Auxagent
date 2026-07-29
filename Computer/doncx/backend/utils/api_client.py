@@ -23,11 +23,11 @@ class APIClient:
         if not self.api_key:
             log_error('APIClient', 'API key is not configured')
             return None, 'API密钥未配置，请在系统设置中配置'
-        
+
         if not self.api_endpoint:
             log_error('APIClient', 'API endpoint is not configured')
             return None, 'API接口地址未配置，请在系统设置中配置'
-        
+
         start_time = time.time()
         try:
             url = f'{self.api_endpoint}/chat/completions'
@@ -40,33 +40,66 @@ class APIClient:
             response = requests.post(url, headers=self.headers, json=payload, timeout=Config.TIMEOUT)
             response.raise_for_status()
             result = response.json()
-            
+
             latency = int((time.time() - start_time) * 1000)
-            log_api_call('llm', url, payload, result, 'success', latency)
-            
+            log_api_call('llm', url, self._truncate_payload(payload), result, 'success', latency)
+
             if result.get('choices'):
                 return result['choices'][0]['message']['content'], None
             return None, 'API返回格式异常'
         except requests.exceptions.Timeout:
             latency = int((time.time() - start_time) * 1000)
-            log_api_call('llm', url, payload if 'payload' in locals() else {}, {}, 'failed', latency)
+            log_api_call('llm', url, self._truncate_payload(payload if 'payload' in locals() else {}), {}, 'failed', latency)
             log_error('APIClient', 'API connection timeout')
             return None, 'API连接超时，请检查网络或稍后重试'
         except requests.exceptions.ConnectionError:
             latency = int((time.time() - start_time) * 1000)
-            log_api_call('llm', url, payload if 'payload' in locals() else {}, {}, 'failed', latency)
+            log_api_call('llm', url, self._truncate_payload(payload if 'payload' in locals() else {}), {}, 'failed', latency)
             log_error('APIClient', 'API connection error')
             return None, 'API连接失败，请检查网络或API地址是否正确'
         except requests.exceptions.HTTPError as e:
             latency = int((time.time() - start_time) * 1000)
-            log_api_call('llm', url, payload if 'payload' in locals() else {}, {}, 'failed', latency)
+            log_api_call('llm', url, self._truncate_payload(payload if 'payload' in locals() else {}), {}, 'failed', latency)
             log_error('APIClient', f'HTTP error: {str(e)}')
             return None, f'API请求失败: {str(e)}'
         except Exception as e:
             latency = int((time.time() - start_time) * 1000)
-            log_api_call('llm', url, payload if 'payload' in locals() else {}, {}, 'failed', latency)
+            log_api_call('llm', url, self._truncate_payload(payload if 'payload' in locals() else {}), {}, 'failed', latency)
             log_error('APIClient', e)
             return None, 'API调用异常，请检查配置或稍后重试'
+
+    @staticmethod
+    def _truncate_payload(payload):
+        """截断日志中的图片 base64 数据，避免日志过大。"""
+        if not isinstance(payload, dict):
+            return payload
+        sanitized = {}
+        for k, v in payload.items():
+            if k == 'messages' and isinstance(v, list):
+                sanitized[k] = []
+                for msg in v:
+                    if not isinstance(msg, dict):
+                        sanitized[k].append(msg)
+                        continue
+                    new_msg = dict(msg)
+                    if isinstance(new_msg.get('content'), list):
+                        new_content = []
+                        for part in new_msg['content']:
+                            if isinstance(part, dict) and part.get('type') == 'image_url':
+                                url = part.get('image_url', {}).get('url', '') or ''
+                                new_content.append({
+                                    'type': 'image_url',
+                                    'image_url': {'url': (url[:80] + '...[truncated]') if len(url) > 80 else url}
+                                })
+                            else:
+                                new_content.append(part)
+                        new_msg['content'] = new_content
+                    sanitized[k].append(new_msg)
+            elif isinstance(v, str) and len(v) > 1000:
+                sanitized[k] = v[:1000] + '...[truncated]'
+            else:
+                sanitized[k] = v
+        return sanitized
 
     # ============ 火山机器翻译（AK/SK 签名） ============
     def call_translate(self, texts, target_language, source_language=''):

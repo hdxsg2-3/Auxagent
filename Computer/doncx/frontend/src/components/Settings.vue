@@ -41,6 +41,7 @@
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2.5">模型选择</label>
                 <select v-model="settings.model" class="input-field w-full px-4 py-3 text-sm">
+                  <option value="ep-20260405222155-5xsbr">火山引擎 DeepSeek-R1</option>
                   <option value="gpt-4">GPT-4</option>
                   <option value="gpt-4o">GPT-4o</option>
                   <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
@@ -237,11 +238,11 @@ const saving = ref(false)
 
 const settings = reactive({
   api_key: '',
-  api_endpoint: '',
-  model: 'gpt-4',
+  api_endpoint: 'https://ark.cn-beijing.volces.com/api/v3',
+  model: 'ep-20260405222155-5xsbr',
   temperature: 0.7,
   max_tokens: 2000,
-  timeout: 30
+  timeout: 120
 })
 
 const storeSettings = reactive({
@@ -250,6 +251,34 @@ const storeSettings = reactive({
   market: 'global',
   default_language: 'en'
 })
+
+// 页面加载时从后端读取已有配置
+async function loadSettings() {
+  try {
+    const response = await settingsAPI.get()
+    if (response.data.success) {
+      const api = response.data.data.api
+      if (api) {
+        settings.api_key = api.api_key || ''
+        settings.api_endpoint = api.api_endpoint || 'https://ark.cn-beijing.volces.com/api/v3'
+        settings.model = api.model || 'ep-20260405222155-5xsbr'
+        settings.temperature = api.temperature ?? 0.7
+        settings.max_tokens = api.max_tokens ?? 2000
+        settings.timeout = api.timeout ?? 120
+      }
+      const store = response.data.data.store
+      if (store) {
+        storeSettings.name = store.name || ''
+        storeSettings.address = store.address || ''
+        storeSettings.market = store.market || 'global'
+        storeSettings.default_language = store.default_language || 'en'
+      }
+    }
+  } catch (error) {
+    console.error('加载配置失败:', error)
+  }
+}
+loadSettings()
 
 async function saveSettings() {
   saving.value = true
