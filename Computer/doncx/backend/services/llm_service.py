@@ -4,6 +4,7 @@ from config import Config
 from utils.api_client import APIClient
 from services.prompt_manager import PromptManager
 from services.knowledge_base import KnowledgeBase
+from services.runtime_config import get_api_settings
 from utils.logger import log_error
 from utils.db import add_invocation_log
 
@@ -11,7 +12,11 @@ class LLMService:
     def __init__(self):
         self.client = APIClient()
         self.prompt_manager = PromptManager()
-        self.model_name = Config.MODEL_NAME
+
+    @property
+    def model_name(self):
+        """当前生效的模型名。实时读取，系统设置里改完立即生效。"""
+        return get_api_settings()['model']
     
     def generate_text(self, prompt, model=None):
         messages = [{'role': 'user', 'content': prompt}]

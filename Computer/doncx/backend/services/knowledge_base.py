@@ -434,7 +434,8 @@ class KnowledgeBase:
 - 仅输出 JSON。"""
 
         messages = [{'role': 'user', 'content': prompt}]
-        response, error = client.call_llm(messages, model=Config.MODEL_NAME)
+        # 不指定模型，交由 APIClient 按「系统设置 > .env」实时解析
+        response, error = client.call_llm(messages)
 
         if error or not response:
             return {'categories': [], 'added_count': 0, 'error': error or 'LLM 未返回内容'}

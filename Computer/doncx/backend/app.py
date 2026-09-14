@@ -3,6 +3,7 @@ import sys
 import threading
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,6 +26,9 @@ from controllers.geo import bp as geo_bp
 from utils.db import init_db
 
 app = Flask(__name__)
+# 部署在 Apache/Nginx 反向代理之后：信任代理传来的 X-Forwarded-Proto / Host，
+# 否则 Flask 生成重定向时会按 http:// 拼绝对地址，浏览器会以「混合内容」拦截。
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 CORS(app)
 
 app.register_blueprint(copywriter_bp, url_prefix='/api/copywriter')
@@ -127,7 +131,11 @@ if __name__ == '__main__':
         try:
             from waitress import serve
             print(f"[App] 生产模式启动 ({HOST}:{PORT})，静态文件目录: {FRONTEND_DIST}")
-            serve(app, host=HOST, port=PORT, threads=8)
+            # clear_untrusted_proxy_headers=False：waitress 默认会丢弃 X-Forwarded-*
+            # 请求头，导致反向代理后面的 Flask 不知道原始请求是 HTTPS，生成的重定向
+            # 会写成 http:// 被浏览器按「混合内容」拦截。本服务只监听内网/本机，可信。
+            serve(app, host=HOST, port=PORT, threads=8,
+                  clear_untrusted_proxy_headers=False)
         except ImportError:
             print("[App] waitress 未安装，回退到 Flask 开发服务器")
             app.run(host=HOST, port=PORT, debug=False, threaded=True)

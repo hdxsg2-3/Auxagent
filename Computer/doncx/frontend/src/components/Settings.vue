@@ -39,13 +39,14 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2.5">模型选择</label>
-                <select v-model="settings.model" class="input-field w-full px-4 py-3 text-sm">
-                  <option value="ep-20260405222155-5xsbr">火山引擎 DeepSeek-R1</option>
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-4o">GPT-4o</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                </select>
+                <label class="block text-sm font-semibold text-slate-700 mb-2.5">模型 / 接入点 ID</label>
+                <input
+                  v-model="settings.model"
+                  type="text"
+                  placeholder="ep-xxxxxxxx（方舟接入点）或模型 ID"
+                  class="input-field w-full px-4 py-3 text-sm"
+                />
+                <p class="text-xs text-slate-400 mt-2">保存后立即生效，无需重启；推理型模型（如 DeepSeek-R1）单次生成可能耗时 1-2 分钟</p>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2.5">温度参数</label>

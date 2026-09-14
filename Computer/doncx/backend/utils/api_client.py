@@ -2,11 +2,13 @@ import requests
 import time
 import json
 from config import Config
+from services.runtime_config import get_api_settings
 from utils.logger import log_error, log_api_call
 from utils.volc_sign import VolcSigner
 
 class APIClient:
     def __init__(self):
+        # 以下仅为 .env 默认值，实际调用时以 get_api_settings() 的实时结果为准
         self.api_key = Config.API_KEY
         self.api_endpoint = Config.API_ENDPOINT
         self.headers = {
@@ -20,24 +22,34 @@ class APIClient:
         self.content_sk = Config.VOLC_CONTENT_SK
     
     def call_llm(self, messages, model=None, temperature=None, max_tokens=None):
-        if not self.api_key:
+        # 实时解析配置：系统设置页保存的值优先，未设置时回退 .env
+        conf = get_api_settings()
+        api_key = conf['api_key']
+        api_endpoint = conf['api_endpoint']
+
+        if not api_key:
             log_error('APIClient', 'API key is not configured')
             return None, 'API密钥未配置，请在系统设置中配置'
 
-        if not self.api_endpoint:
+        if not api_endpoint:
             log_error('APIClient', 'API endpoint is not configured')
             return None, 'API接口地址未配置，请在系统设置中配置'
 
         start_time = time.time()
         try:
-            url = f'{self.api_endpoint}/chat/completions'
-            payload = {
-                'model': model or Config.MODEL_NAME,
-                'messages': messages,
-                'temperature': temperature or Config.TEMPERATURE,
-                'max_tokens': max_tokens or Config.MAX_TOKENS
+            url = f'{api_endpoint}/chat/completions'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {api_key}'
             }
-            response = requests.post(url, headers=self.headers, json=payload, timeout=Config.TIMEOUT)
+            payload = {
+                'model': model or conf['model'],
+                'messages': messages,
+                # 用 is not None 判断，避免 temperature=0 被当成未设置而回退默认值
+                'temperature': temperature if temperature is not None else conf['temperature'],
+                'max_tokens': max_tokens if max_tokens is not None else conf['max_tokens']
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=conf['timeout'])
             response.raise_for_status()
             result = response.json()
 

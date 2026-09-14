@@ -104,7 +104,8 @@ export const keywordAPI = {
 
 export const settingsAPI = {
   get() {
-    return api.get('/settings')
+    // 带结尾斜杠，避免命中 308 重定向（重定向地址在反代下容易被拼成 http://）
+    return api.get('/settings/')
   },
   update(data) {
     return api.post('/settings/update', data)
