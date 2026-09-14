@@ -7,9 +7,12 @@
 # 设计前提（按需求确定）：
 #   - 直接覆盖部署到 app/，不做版本目录、不做回滚、不备份
 #   - shared/（.env、SQLite 数据、venv、日志）永不触碰
+#   - 每次部署都执行 pip install：依赖清单可能新增包，交由 pip 自身的
+#     下载缓存（服务器 ~/.cache/pip）加速，不做自定义跳过判断
 set -euo pipefail
 
 ARCHIVE="${1:?用法: deploy.sh <发布包路径>}"
+START_TS="$(date +%s)"
 
 APP_DIR="/home/lighthouse/sziit/auxagent/app"
 SHARED_DIR="/home/lighthouse/sziit/auxagent/shared"
@@ -28,14 +31,14 @@ tar -xzf "${ARCHIVE}" -C "${STAGE}"
 [ -d "${STAGE}/backend" ] || { echo "发布包缺少 backend 目录" >&2; exit 1; }
 [ -f "${STAGE}/frontend/dist/index.html" ] || { echo "发布包缺少前端构建产物 frontend/dist/index.html" >&2; exit 1; }
 
-log "2/6 同步后端代码"
+log "2/6 同步后端代码（--checksum：内容相同的文件不重写，保留 __pycache__ 以复用字节码缓存）"
 mkdir -p "${APP_DIR}/backend" "${APP_DIR}/frontend/dist"
-rsync -a --delete --exclude '__pycache__/' "${STAGE}/backend/" "${APP_DIR}/backend/"
+rsync -a --checksum --delete --exclude '__pycache__/' "${STAGE}/backend/" "${APP_DIR}/backend/"
 
 log "3/6 同步前端构建产物"
-rsync -a --delete "${STAGE}/frontend/dist/" "${APP_DIR}/frontend/dist/"
+rsync -a --checksum --delete "${STAGE}/frontend/dist/" "${APP_DIR}/frontend/dist/"
 
-log "4/6 安装依赖（清华镜像）"
+log "4/6 安装依赖（清华镜像；已装过的包走 pip 本地缓存，不重复下载）"
 "${VENV_PIP}" install -q --index-url "${PIP_INDEX}" --timeout 60 \
   -r "${APP_DIR}/backend/requirements-server.txt"
 
@@ -60,4 +63,4 @@ fi
 echo "[deploy] 健康检查通过：$(curl -s "${HEALTH_URL}")"
 echo "[deploy] 服务状态：$(systemctl is-active "${SERVICE}")"
 echo "[deploy] 前端产物：$(grep -o 'assets/[^"]*\.js' "${APP_DIR}/frontend/dist/index.html" || true)"
-log "部署完成"
+log "部署完成，耗时 $(( $(date +%s) - START_TS )) 秒"

@@ -19,18 +19,57 @@ jobs:
       - name: 拉取代码
         uses: actions/checkout@v4
 
+      # ---- 缓存策略（全部使用 Actions 原生机制，无自定义跳过逻辑）----
+      # 1) 构建产物缓存：前端源码未变化时直接复用上次的 dist，跳过安装与构建
+      # 2) node_modules 缓存：源码变了但依赖未变时，省掉 npm ci
+      # 3) setup-node 的 npm 缓存：真正需要安装时复用下载缓存
+      - name: 缓存前端构建产物
+        id: dist-cache
+        uses: actions/cache@v4
+        with:
+          path: Computer/doncx/frontend/dist
+          key: vite-dist-v1-${{ hashFiles('Computer/doncx/frontend/src/**', 'Computer/doncx/frontend/index.html', 'Computer/doncx/frontend/*.js', 'Computer/doncx/frontend/package-lock.json') }}
+
       - name: 准备 Node 20
+        if: steps.dist-cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
           cache-dependency-path: Computer/doncx/frontend/package-lock.json
 
-      - name: 构建前端
+      - name: 缓存 node_modules
+        id: modules-cache
+        if: steps.dist-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: Computer/doncx/frontend/node_modules
+          key: node-modules-v1-${{ hashFiles('Computer/doncx/frontend/package-lock.json') }}
+
+      - name: 安装前端依赖
+        if: steps.dist-cache.outputs.cache-hit != 'true' && steps.modules-cache.outputs.cache-hit != 'true'
         working-directory: Computer/doncx/frontend
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: 构建前端
+        if: steps.dist-cache.outputs.cache-hit != 'true'
+        working-directory: Computer/doncx/frontend
+        run: npm run build
+
+      - name: 确认前端产物
         run: |
-          npm ci --no-audit --no-fund
-          npm run build
+          if [ ! -f Computer/doncx/frontend/dist/index.html ]; then
+            echo "前端产物缺失（缓存可能已损坏），请删除缓存后重跑" >&2
+            exit 1
+          fi
+          echo "前端入口：$(grep -o 'assets/[^"]*\.js' Computer/doncx/frontend/dist/index.html)"
+          if [ "${{ steps.dist-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "前端源码未变化 -> 复用缓存，已跳过 npm ci 与构建"
+          elif [ "${{ steps.modules-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "依赖未变化 -> 复用 node_modules 缓存，仅重新构建"
+          else
+            echo "依赖有变化 -> 本次重新安装依赖并构建"
+          fi
 
       - name: 打包后端与前端产物
         run: |
