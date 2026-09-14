@@ -24,7 +24,7 @@
                 class="input-field w-full px-4 py-3 text-sm"
                 placeholder="请输入您的API密钥"
               />
-              <p class="text-xs text-slate-400 mt-2">请在平台获取您的API密钥，确保密钥安全</p>
+              <p class="text-xs text-slate-400 mt-2">已保存的密钥只显示掩码；不动它就保持原值，留空则回退到服务器默认，填入新值即覆盖</p>
             </div>
 
             <div>

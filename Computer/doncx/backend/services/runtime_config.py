@@ -10,6 +10,24 @@ from utils.db import get_settings
 
 DEFAULT_MERCHANT = 'default'
 
+# 密钥回显掩码标记：真实密钥不会包含该串，可用来识别「用户没有修改这一项」
+MASK_MARKER = '****'
+
+
+def mask_secret(value, prefix=8, suffix=4):
+    """把密钥打码成 ark-0c55****0281 的形式，仅用于界面回显"""
+    if not value:
+        return ''
+    text = str(value)
+    if len(text) <= prefix + suffix:
+        return MASK_MARKER
+    return f'{text[:prefix]}{MASK_MARKER}{text[-suffix:]}'
+
+
+def is_masked(value):
+    """判断提交上来的值是否为打码占位符（代表用户没有改这一项）"""
+    return isinstance(value, str) and MASK_MARKER in value
+
 
 def _env_defaults():
     """来自 .env（环境变量）的默认值"""
