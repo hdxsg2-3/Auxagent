@@ -1,0 +1,18 @@
+# 服务器实际部署使用的依赖集合（最小可运行）
+#
+# 与 requirements.txt 的差异：故意不包含 RAG 相关的重依赖
+#   sentence-transformers / faiss-cpu
+# 原因：服务器内存只有 1.7G，同机还跑着 MySQL / Redis / 两个 Java 服务，
+#      装 torch 有把邻居挤到 OOM 的风险。缺少这些依赖时知识库检索会自动
+#      降级为关键词匹配，功能不中断（日志里会打印降级提示）。
+#      将来升配或加 swap 后，把这两个包加回来即可启用语义检索。
+#
+# 安装：pip install -r requirements-server.txt
+flask==2.3.3
+flask-cors==4.0.0
+requests==2.31.0
+waitress>=2.1.0
+marshmallow==3.21.0
+boto3>=1.28.0
+numpy>=1.24.0
+Pillow>=10.0.0

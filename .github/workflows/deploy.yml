@@ -1,0 +1,85 @@
+name: Deploy
+
+# 只允许手动触发：仓库页面 Actions -> Deploy -> Run workflow
+on:
+  workflow_dispatch:
+
+# 同一时间只允许一个部署任务，避免两次部署互相覆盖
+concurrency:
+  group: auxagent-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 构建并部署到 aux.sziit.top
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Computer/doncx/frontend/package-lock.json
+
+      - name: 构建前端
+        working-directory: Computer/doncx/frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: 打包后端与前端产物
+        run: |
+          tar -czf /tmp/auxagent-deploy.tar.gz \
+            --exclude='*__pycache__*' \
+            --exclude='*.pyc' \
+            --exclude='*.db' \
+            --exclude='*/logs/*' \
+            -C Computer/doncx backend frontend/dist
+          ls -lh /tmp/auxagent-deploy.tar.gz
+          echo "包含文件数：$(tar -tzf /tmp/auxagent-deploy.tar.gz | wc -l)"
+
+      - name: 配置 SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: 上传发布包与部署脚本
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            /tmp/auxagent-deploy.tar.gz \
+            Computer/doncx/deploy/deploy.sh \
+            "$SSH_USER@$SSH_HOST:/tmp/"
+
+      - name: 在服务器执行部署
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$SSH_USER@$SSH_HOST" \
+            "bash /tmp/deploy.sh /tmp/auxagent-deploy.tar.gz"
+
+      - name: 从公网验证
+        run: |
+          echo "健康检查："
+          curl -fsS --max-time 20 https://aux.sziit.top/api/health
+          echo
+          echo "首页："
+          curl -fsS --max-time 20 -o /dev/null -w "HTTP %{http_code}\n" https://aux.sziit.top/
