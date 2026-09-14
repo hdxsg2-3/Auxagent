@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl font-bold text-slate-900">通用店铺自动对接</h2>
-        <p class="text-sm text-slate-500 mt-1">免费即时开通 · 全自动上架 · 消息收发 · 浏览器自动化兜底 · 无需等待审核</p>
+        <p class="text-sm text-slate-500 mt-1">免费即时开通 · 全自动上架 · 消息收发 · 浏览器自动化（备用） · 无需等待审核</p>
       </div>
       <div class="flex gap-3">
         <button @click="loadStatus" class="btn-secondary px-4 py-2.5 rounded-xl flex items-center gap-2">
@@ -305,7 +305,7 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Monitor class="w-5 h-5 text-violet-500" /> 浏览器自动化兜底方案
+            <Monitor class="w-5 h-5 text-violet-500" /> 浏览器自动化备用方案
           </h3>
           <p class="text-sm text-slate-500 mt-1">当 API 不可用时（无凭证 / 审核中 / 付费门槛），通过浏览器自动化完成操作</p>
         </div>
@@ -402,33 +402,6 @@
       </div>
     </div>
 
-    <!-- 支持的平台对比表 -->
-    <div class="card p-6">
-      <h3 class="text-lg font-bold text-slate-800 mb-4">平台对比</h3>
-      <el-table :data="supportedPlatforms" stripe>
-        <el-table-column prop="name" label="平台" width="180" />
-        <el-table-column prop="cost" label="费用" width="200" />
-        <el-table-column prop="instant" label="即时开通" width="100">
-          <template #default="{ row }">
-            <CheckCircle2 v-if="row.instant" class="w-4 h-4 text-emerald-500" />
-            <XCircle v-else class="w-4 h-4 text-red-400" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="requires_approval" label="需要审核" width="100">
-          <template #default="{ row }">
-            <CheckCircle2 v-if="row.requires_approval" class="w-4 h-4 text-amber-500" />
-            <Minus v-else class="w-4 h-4 text-emerald-400" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="requires_credentials" label="需要凭证" width="100">
-          <template #default="{ row }">
-            <CheckCircle2 v-if="row.requires_credentials" class="w-4 h-4 text-amber-500" />
-            <Minus v-else class="w-4 h-4 text-emerald-400" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="description" label="说明" show-overflow-tooltip />
-      </el-table>
-    </div>
   </div>
 </template>
 

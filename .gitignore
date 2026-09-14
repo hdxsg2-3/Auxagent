@@ -39,8 +39,9 @@ Thumbs.db
 # ---- WorkBuddy 内部数据 ----
 .workbuddy/
 
-# ---- CodeBuddy ----
+# ---- CodeBuddy / 本地 Agent 配置 ----
 .codebuddy/
+.agent/
 
 # ---- 虚拟环境 ----
 Computer/.venv/

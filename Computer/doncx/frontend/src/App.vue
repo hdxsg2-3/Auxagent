@@ -114,7 +114,7 @@
 import { ref, computed, provide } from 'vue'
 import {
   Globe, LayoutDashboard, PenTool, ShieldCheck, MessageSquare,
-  FileText, Package, Settings, Bell, Menu, Store, Zap, ShoppingCart, Clock, Eye, Image
+  FileText, Package, Settings, Bell, Menu, Store, Zap, ShoppingCart, Clock, Eye, Radar
 } from 'lucide-vue-next'
 
 import Dashboard from './components/Dashboard.vue'
@@ -129,8 +129,8 @@ import PlatformShops from './components/PlatformShops.vue'
 import UniversalIntegration from './components/UniversalIntegration.vue'
 import LegalDetail from './components/LegalDetail.vue'
 import SchedulerPanel from './components/SchedulerPanel.vue'
-import ImageTools from './components/ImageTools.vue'
 import CompetitorAnalysis from './components/CompetitorAnalysis.vue'
+import GeoOptimization from './components/GeoOptimization.vue'
 import UserMemory from './components/UserMemory.vue'
 
 const currentPage = ref('home')
@@ -149,7 +149,7 @@ const navItems = computed(() => [
   { id: 'logistics', label: '物流单据', icon: Package },
   { id: 'listing-manager', label: '商品管理', icon: ShoppingCart },
   { id: 'competitor', label: '竞品分析', icon: Eye },
-  { id: 'image-tools', label: '图片处理', icon: Image },
+  { id: 'geo', label: 'GEO优化', icon: Radar },
   { id: 'scheduler', label: '自动巡检', icon: Clock },
 ])
 
@@ -165,7 +165,7 @@ const pageComponents = {
   logistics: Logistics,
   'listing-manager': ListingManager,
   competitor: CompetitorAnalysis,
-  'image-tools': ImageTools,
+  geo: GeoOptimization,
   scheduler: SchedulerPanel,
   memory: UserMemory,
   settings: SettingsPage

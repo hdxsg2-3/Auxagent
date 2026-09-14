@@ -1,7 +1,7 @@
 import os
 import sys
 import threading
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -20,8 +20,8 @@ from controllers.batch import bp as batch_bp
 from controllers.keyword_research import bp as keyword_bp
 from controllers.scheduler import bp as scheduler_bp
 from controllers.feedback import bp as feedback_bp
-from controllers.image_tools import bp as image_tools_bp
 from controllers.competitor import bp as competitor_bp
+from controllers.geo import bp as geo_bp
 from utils.db import init_db
 
 app = Flask(__name__)
@@ -41,8 +41,8 @@ app.register_blueprint(batch_bp, url_prefix='/api/batch')
 app.register_blueprint(keyword_bp, url_prefix='/api/keyword-research')
 app.register_blueprint(scheduler_bp, url_prefix='/api/scheduler')
 app.register_blueprint(feedback_bp, url_prefix='/api/feedback')
-app.register_blueprint(image_tools_bp, url_prefix='/api/image-tools')
 app.register_blueprint(competitor_bp, url_prefix='/api/competitor')
+app.register_blueprint(geo_bp, url_prefix='/api/geo')
 
 init_db()
 
@@ -81,6 +81,51 @@ def health():
     })
 
 
+# ────────── 生产模式：托管前端静态文件 ──────────
+FRONTEND_DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'dist')
+PRODUCTION = os.environ.get('PRODUCTION', '').lower() in ('1', 'true', 'yes')
+
+
+@app.route('/')
+def serve_index():
+    """生产模式下返回前端首页"""
+    if PRODUCTION and os.path.isdir(FRONTEND_DIST):
+        return send_from_directory(FRONTEND_DIST, 'index.html')
+    return jsonify({'message': 'API server is running. Frontend is served separately in dev mode.'})
+
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """生产模式下托管前端静态资源"""
+    if PRODUCTION and os.path.isdir(FRONTEND_DIST):
+        return send_from_directory(os.path.join(FRONTEND_DIST, 'assets'), filename)
+    return '', 404
+
+
+@app.route('/<path:path>')
+def serve_spa(path):
+    """SPA 路由回退：非 API 路径均返回 index.html（生产模式）"""
+    if not PRODUCTION:
+        return '', 404
+    dist_path = os.path.join(FRONTEND_DIST, path)
+    if os.path.isfile(dist_path):
+        return send_from_directory(FRONTEND_DIST, path)
+    # SPA fallback：不存在的路径（如 /copywriter）返回 index.html
+    return send_from_directory(FRONTEND_DIST, 'index.html')
+
+
+# ────────── 启动 ──────────
 if __name__ == '__main__':
-    # threaded=True 启用多线程，避免单请求阻塞（如 HuggingFace 模型加载重试）导致全站卡死
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    if PRODUCTION:
+        # 生产模式：使用 waitress 作为 WSGI 服务器
+        try:
+            from waitress import serve
+            print(f"[App] 生产模式启动 (端口 5000)，静态文件目录: {FRONTEND_DIST}")
+            serve(app, host='0.0.0.0', port=5000, threads=8)
+        except ImportError:
+            print("[App] waitress 未安装，回退到 Flask 开发服务器")
+            app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    else:
+        # 开发模式：使用 Flask 内置服务器
+        print("[App] 开发模式启动 (端口 5000)")
+        app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
