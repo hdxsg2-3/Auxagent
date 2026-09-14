@@ -105,6 +105,9 @@ def serve_assets(filename):
 @app.route('/<path:path>')
 def serve_spa(path):
     """SPA 路由回退：非 API 路径均返回 index.html（生产模式）"""
+    # API 路径不做 SPA 回退，否则前端拿到 HTML 会在 JSON 解析处报错
+    if path == 'api' or path.startswith('api/'):
+        return jsonify({'success': False, 'message': 'API endpoint not found'}), 404
     if not PRODUCTION:
         return '', 404
     dist_path = os.path.join(FRONTEND_DIST, path)
@@ -115,17 +118,20 @@ def serve_spa(path):
 
 
 # ────────── 启动 ──────────
+HOST = os.environ.get('HOST') or '0.0.0.0'
+PORT = int(os.environ.get('PORT') or 5000)
+
 if __name__ == '__main__':
     if PRODUCTION:
         # 生产模式：使用 waitress 作为 WSGI 服务器
         try:
             from waitress import serve
-            print(f"[App] 生产模式启动 (端口 5000)，静态文件目录: {FRONTEND_DIST}")
-            serve(app, host='0.0.0.0', port=5000, threads=8)
+            print(f"[App] 生产模式启动 ({HOST}:{PORT})，静态文件目录: {FRONTEND_DIST}")
+            serve(app, host=HOST, port=PORT, threads=8)
         except ImportError:
             print("[App] waitress 未安装，回退到 Flask 开发服务器")
-            app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+            app.run(host=HOST, port=PORT, debug=False, threaded=True)
     else:
         # 开发模式：使用 Flask 内置服务器
-        print("[App] 开发模式启动 (端口 5000)")
-        app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+        print(f"[App] 开发模式启动 ({HOST}:{PORT})")
+        app.run(host=HOST, port=PORT, debug=True, threaded=True)

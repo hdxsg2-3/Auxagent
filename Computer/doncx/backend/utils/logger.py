@@ -5,8 +5,10 @@ from config import Config
 def setup_logger():
     logger = logging.getLogger('crossborder_agent')
     logger.setLevel(getattr(logging, Config.LOG_LEVEL))
-    
-    os.makedirs('logs', exist_ok=True)
+
+    # 日志目录按 LOG_FILE 的实际位置创建（支持绝对路径，不依赖当前工作目录）
+    log_dir = os.path.dirname(os.path.abspath(Config.LOG_FILE)) or '.'
+    os.makedirs(log_dir, exist_ok=True)
     
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     

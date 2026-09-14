@@ -46,3 +46,11 @@ Thumbs.db
 # ---- 虚拟环境 ----
 Computer/.venv/
 Computer/venv/
+
+# ---- 服务器凭据（严禁提交到仓库）----
+server.txt
+*server.txt
+*.pem
+*.ppk
+id_rsa
+id_ed25519

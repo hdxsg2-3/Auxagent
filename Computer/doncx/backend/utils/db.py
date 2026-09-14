@@ -15,7 +15,8 @@ import sqlite3
 from contextlib import contextmanager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
+# 部署时通过 AUXAGENT_DATA_DIR 指向持久化目录，避免更新代码时误删业务数据
+DATA_DIR = os.environ.get('AUXAGENT_DATA_DIR') or os.path.join(BASE_DIR, 'data')
 DB_PATH = os.path.join(DATA_DIR, 'app.db')
 
 DEFAULT_MERCHANT = 'default'
